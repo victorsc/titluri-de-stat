@@ -139,6 +139,34 @@
     .chart-panel { display: none; }
     .chart-panel.active { display: block; }
 
+    /* ── Fixed legend ── */
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem 0.75rem;
+      padding: 0.6rem 1rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      color: #9aa;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.15rem 0;
+      transition: opacity 0.15s;
+    }
+    .legend-item:hover { color: var(--text); }
+    .legend-item.legend-hidden { opacity: 0.3; }
+    .legend-swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
     /* Scrollable chart container */
     .chart-outer {
       position: relative;
@@ -147,11 +175,11 @@
     .chart-outer::after {
       content: '';
       position: absolute;
-      top: 0; right: 0;
-      width: 40px; height: 100%;
+      bottom: 0; right: 0;
+      width: 40px;
+      height: calc(100% - var(--legend-h, 40px));
       background: linear-gradient(to right, transparent, var(--surface));
       pointer-events: none;
-      border-radius: 0 0 var(--radius) 0;
       opacity: 1;
       transition: opacity 0.2s;
     }
@@ -422,38 +450,41 @@ function buildChart(raw, canvasId, colorMap) {
     const atEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 4;
     outer.classList.toggle('scrolled-end', atEnd);
   }, { passive: true });
-  // Hide fade immediately if content fits without scrolling
   if (chartW <= containerW) outer.classList.add('scrolled-end');
 
-  new Chart(canvas, {
+  const datasets = mats.map(m => ({
+    label: m === '2d' ? '2 ani (dona)' : m + ' ani',
+    data: labels.map(lbl => map[m]?.[lbl] ?? null),
+    borderColor: colorMap[m] || '#fff',
+    backgroundColor: colorMap[m] || '#fff',
+    fill: false,
+    tension: 0.3,
+    pointRadius: labels.map(lbl => map[m]?.[lbl] != null ? 4 : 0),
+    pointHoverRadius: 7,
+    spanGaps: false,
+    borderWidth: 2,
+  }));
+
+  // Build fixed HTML legend (sits above the scrollable wrap)
+  const legendEl = document.createElement('div');
+  legendEl.className = 'chart-legend';
+  datasets.forEach((ds, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'legend-item';
+    btn.innerHTML = `<span class="legend-swatch" style="background:${ds.borderColor}"></span>${ds.label}`;
+    btn.dataset.idx = i;
+    legendEl.appendChild(btn);
+  });
+  outer.insertBefore(legendEl, wrap);
+
+  const chart = new Chart(canvas, {
     type: 'line',
-    data: { labels, datasets: mats.map(m => ({
-      label: m === '2d' ? '2 ani (dona)' : m + ' ani',
-      data: labels.map(lbl => map[m]?.[lbl] ?? null),
-      borderColor: colorMap[m] || '#fff',
-      backgroundColor: colorMap[m] || '#fff',
-      fill: false,
-      tension: 0.3,
-      pointRadius: labels.map(lbl => map[m]?.[lbl] != null ? 4 : 0),
-      pointHoverRadius: 7,
-      spanGaps: false,
-      borderWidth: 2,
-    }))},
+    data: { labels, datasets },
     options: {
       responsive: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            color: '#9aa',
-            font: { size: 11 },
-            boxWidth: 12,
-            padding: 10,
-            usePointStyle: true,
-            pointStyleWidth: 10,
-          },
-        },
+        legend: { display: false },
         tooltip: {
           backgroundColor: 'rgba(10,12,18,0.92)',
           borderColor: '#252a35',
@@ -486,6 +517,17 @@ function buildChart(raw, canvasId, colorMap) {
         },
       },
     },
+  });
+
+  // Wire up legend toggle clicks
+  legendEl.querySelectorAll('.legend-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = Number(btn.dataset.idx);
+      const visible = chart.isDatasetVisible(i);
+      chart.setDatasetVisibility(i, !visible);
+      chart.update();
+      btn.classList.toggle('legend-hidden', visible);
+    });
   });
 }
 
