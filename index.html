@@ -130,10 +130,20 @@
     .rates-strip {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 0.4rem 0.5rem;
       padding: 0.6rem 1.25rem;
       border-bottom: 1px solid var(--border);
       background: rgba(255,255,255,0.02);
+    }
+    .strip-date {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-right: 0.25rem;
+      white-space: nowrap;
     }
     .rate-pill {
       display: flex;
@@ -299,7 +309,7 @@
       <h2>Tezaur</h2>
       <span class="badge">Subscriere directă · RON</span>
     </div>
-    <div class="rates-strip" id="tezaur-rates"></div>
+    <div class="rates-strip" id="tezaur-rates" aria-label="Ultimele rate Tezaur"></div>
     <div class="chart-panel active">
       <div class="chart-skeleton" id="skel-tezaur">
         <div class="skel-bar" style="height:55%"></div><div class="skel-bar" style="height:70%"></div><div class="skel-bar" style="height:60%"></div><div class="skel-bar" style="height:80%"></div><div class="skel-bar" style="height:65%"></div><div class="skel-bar" style="height:90%"></div><div class="skel-bar" style="height:75%"></div><div class="skel-bar" style="height:85%"></div><div class="skel-bar" style="height:70%"></div><div class="skel-bar" style="height:95%"></div>
@@ -317,12 +327,12 @@
       <h2>Fidelis</h2>
       <span class="badge">Piață secundară</span>
     </div>
-    <div class="rates-strip" id="fidelis-rates"></div>
     <div class="tab-bar">
       <button class="tab-btn active" data-target="ron-panel">RON</button>
       <button class="tab-btn"        data-target="eur-panel">EUR</button>
     </div>
     <div id="ron-panel" class="chart-panel active">
+      <div class="rates-strip" id="fidelis-rates-ron"></div>
       <div class="chart-skeleton" id="skel-ron">
         <div class="skel-bar" style="height:60%"></div><div class="skel-bar" style="height:75%"></div><div class="skel-bar" style="height:55%"></div><div class="skel-bar" style="height:85%"></div><div class="skel-bar" style="height:70%"></div><div class="skel-bar" style="height:95%"></div><div class="skel-bar" style="height:80%"></div><div class="skel-bar" style="height:65%"></div><div class="skel-bar" style="height:90%"></div><div class="skel-bar" style="height:75%"></div>
       </div>
@@ -331,6 +341,7 @@
       </div>
     </div>
     <div id="eur-panel" class="chart-panel">
+      <div class="rates-strip" id="fidelis-rates-eur"></div>
       <div class="chart-outer">
         <div class="chart-wrap"><canvas id="eurChart"></canvas></div>
       </div>
@@ -356,11 +367,6 @@ let _eurData = [];
 let _eurBuilt = false;
 
 // ── Latest rates strip ────────────────────────────────────────────
-function setLastUpdated(cardSelector, date) {
-  const badge = document.querySelector(`${cardSelector} .badge`);
-  if (badge && date) badge.textContent += ` · ${date}`;
-}
-
 function buildRatesStrip(raw, stripId, colorMap) {
   const strip = document.getElementById(stripId);
   if (!strip) return;
@@ -371,7 +377,7 @@ function buildRatesStrip(raw, stripId, colorMap) {
       const n = v => v === '2d' ? 2.5 : Number(v);
       return n(a.m) - n(b.m);
     });
-  strip.innerHTML = latest.map(e => {
+  const pills = latest.map(e => {
     const label = e.m === '2d' ? '2 ani (dona)' : `${e.m} ${e.m === 1 ? 'an' : 'ani'}`;
     const color = colorMap[e.m] || '#fff';
     return `<span class="rate-pill">
@@ -380,6 +386,7 @@ function buildRatesStrip(raw, stripId, colorMap) {
       <span class="pill-value">${e.r}%</span>
     </span>`;
   }).join('');
+  strip.innerHTML = `<span class="strip-date">${lastDate}</span>` + pills;
 }
 
 Promise.all([
@@ -387,10 +394,8 @@ Promise.all([
   fetch('data/fidelis.json').then(r => r.json()),
 ]).then(([tezaur, fidelis]) => {
   _eurData = fidelis.eur;
-  buildRatesStrip(tezaur,      'tezaur-rates',  T_CLR);
-  buildRatesStrip(fidelis.ron, 'fidelis-rates', F_CLR);
-  setLastUpdated('.tezaur-card',  tezaur[tezaur.length - 1]?.d);
-  setLastUpdated('.fidelis-card', fidelis.ron[fidelis.ron.length - 1]?.d);
+  buildRatesStrip(tezaur,      'tezaur-rates',     T_CLR);
+  buildRatesStrip(fidelis.ron, 'fidelis-rates-ron', F_CLR);
   buildChart(tezaur,       'tezaurChart', T_CLR);
   buildChart(fidelis.ron,  'ronChart',    F_CLR);
 }).catch(err => console.error('Failed to load data:', err));
@@ -528,6 +533,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById(btn.dataset.target).classList.add('active');
     if (btn.dataset.target === 'eur-panel' && !_eurBuilt && _eurData.length) {
+      buildRatesStrip(_eurData, 'fidelis-rates-eur', F_CLR);
       buildChart(_eurData, 'eurChart', F_CLR);
       _eurBuilt = true;
     }
