@@ -217,7 +217,7 @@
     }
 
     /* ── Chart panels ── */
-    .chart-panel { display: none; }
+    .chart-panel { display: none; min-height: 340px; }
     .chart-panel.active { display: block; }
 
     /* ── Fixed legend ── */
@@ -239,6 +239,7 @@
       border: none;
       cursor: pointer;
       padding: 0.15rem 0.25rem;
+      min-height: 24px;
       border-radius: 4px;
       transition: opacity 0.15s, color 0.15s;
     }
@@ -395,10 +396,8 @@
   <br>Informațiile au caracter informativ și nu constituie recomandare de investiție.
 </footer>
 
-<!-- P1: Chart.js moved here so it doesn't block initial render -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
-        integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt"
-        crossorigin="anonymous"></script>
+<!-- P1: Chart.js vendored locally to eliminate CDN render-blocking -->
+<script src="vendor/chart.umd.min.js" defer></script>
 <script>
 // ── Colors ───────────────────────────────────────────────────────
 const T_CLR = {1:'#ff6384',2:'#36a2eb',3:'#ffce56',5:'#9966ff'};
