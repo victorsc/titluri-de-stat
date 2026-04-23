@@ -18,9 +18,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
-          integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt"
-          crossorigin="anonymous"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -44,6 +41,29 @@
       font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.6;
       min-height: 100vh;
+    }
+
+    /* ── A7: Skip link ── */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 1rem;
+      z-index: 9999;
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 0 0 var(--radius) var(--radius);
+      text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* ── A8: Focus-visible ring ── */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
     }
 
     /* ── Header ── */
@@ -73,6 +93,8 @@
       color: var(--muted);
       font-size: 0.88rem;
     }
+    /* A1: explicit color instead of opacity so contrast is maintained */
+    .subtitle-secondary { color: var(--muted); }
 
     /* ── Layout ── */
     main {
@@ -167,7 +189,7 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* ── Tabs ── */
+    /* ── A6: Tabs ── */
     .tab-bar {
       display: flex;
       gap: 0.4rem;
@@ -187,7 +209,7 @@
       transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
     .tab-btn:hover { color: var(--text); }
-    .tab-btn.active {
+    .tab-btn[aria-selected="true"] {
       color: var(--accent);
       border-color: var(--accent);
       background: rgba(79,142,247,0.1);
@@ -204,6 +226,7 @@
       gap: 0.3rem 0.75rem;
       padding: 0.6rem 1rem 0.5rem;
       border-bottom: 1px solid var(--border);
+      role: group;
     }
     .legend-item {
       display: flex;
@@ -214,22 +237,22 @@
       background: none;
       border: none;
       cursor: pointer;
-      padding: 0.15rem 0;
-      transition: opacity 0.15s;
+      padding: 0.15rem 0.25rem;
+      border-radius: 4px;
+      transition: opacity 0.15s, color 0.15s;
     }
     .legend-item:hover { color: var(--text); }
-    .legend-item.legend-hidden { opacity: 0.3; }
+    .legend-item[aria-pressed="false"] { opacity: 0.3; }
     .legend-swatch {
       width: 10px; height: 10px;
       border-radius: 50%;
       flex-shrink: 0;
     }
 
-    /* Scrollable chart container */
+    /* ── A3: Scrollable chart container ── */
     .chart-outer {
       position: relative;
     }
-    /* Fade hint on the right when chart overflows */
     .chart-outer::after {
       content: '';
       position: absolute;
@@ -249,14 +272,18 @@
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
       scrollbar-color: var(--border) transparent;
-      /* height set by JS */
+      /* A3: keyboard accessible scrollable region */
+      tabindex: 0;
+    }
+    .chart-wrap:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
     }
     .chart-wrap::-webkit-scrollbar { height: 4px; }
     .chart-wrap::-webkit-scrollbar-track { background: transparent; }
     .chart-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     .chart-wrap canvas {
-      /* width & height set by JS */
       display: block;
     }
 
@@ -289,29 +316,38 @@
       font-size: 0.75rem;
       line-height: 2;
     }
-    footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    /* A2: always underline footer links so they're distinguishable without color */
+    footer a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    footer a:hover { text-decoration-thickness: 2px; }
   </style>
 </head>
 <body>
 
+<!-- A7: Skip link for keyboard users -->
+<a class="skip-link" href="#main-content">Sari la conținut</a>
+
 <header>
   <h1>Evoluția Dobânzilor</h1>
-  <p class="subtitle">Fidelis &amp; Tezaur · România &nbsp;·&nbsp; <span style="opacity:.6">Bond Yield History</span></p>
+  <!-- A1: explicit color class instead of opacity:.6 -->
+  <p class="subtitle">Fidelis &amp; Tezaur · România &nbsp;·&nbsp; <span class="subtitle-secondary">Bond Yield History</span></p>
 </header>
 
-<main>
+<main id="main-content">
 
   <!-- Tezaur -->
   <article class="card tezaur-card">
     <div class="card-header">
-      <span class="dot"></span>
+      <span class="dot" aria-hidden="true"></span>
       <h2>Tezaur</h2>
       <span class="badge">Subscriere directă · RON</span>
     </div>
     <div class="rates-strip" id="tezaur-rates" aria-label="Ultimele rate Tezaur"></div>
     <div class="chart-panel active">
-      <div class="chart-skeleton" id="skel-tezaur">
+      <div class="chart-skeleton" id="skel-tezaur" aria-hidden="true">
         <div class="skel-bar" style="height:55%"></div><div class="skel-bar" style="height:70%"></div><div class="skel-bar" style="height:60%"></div><div class="skel-bar" style="height:80%"></div><div class="skel-bar" style="height:65%"></div><div class="skel-bar" style="height:90%"></div><div class="skel-bar" style="height:75%"></div><div class="skel-bar" style="height:85%"></div><div class="skel-bar" style="height:70%"></div><div class="skel-bar" style="height:95%"></div>
       </div>
       <div class="chart-outer">
@@ -323,24 +359,25 @@
   <!-- Fidelis -->
   <article class="card fidelis-card">
     <div class="card-header">
-      <span class="dot"></span>
+      <span class="dot" aria-hidden="true"></span>
       <h2>Fidelis</h2>
       <span class="badge">Piață secundară</span>
     </div>
-    <div class="tab-bar">
-      <button class="tab-btn active" data-target="ron-panel">RON</button>
-      <button class="tab-btn"        data-target="eur-panel">EUR</button>
+    <!-- A6: proper tablist ARIA -->
+    <div class="tab-bar" role="tablist" aria-label="Monedă Fidelis">
+      <button class="tab-btn" role="tab" id="tab-ron" aria-selected="true"  aria-controls="ron-panel">RON</button>
+      <button class="tab-btn" role="tab" id="tab-eur" aria-selected="false" aria-controls="eur-panel">EUR</button>
     </div>
-    <div id="ron-panel" class="chart-panel active">
+    <div id="ron-panel" class="chart-panel active" role="tabpanel" aria-labelledby="tab-ron">
       <div class="rates-strip" id="fidelis-rates-ron"></div>
-      <div class="chart-skeleton" id="skel-ron">
+      <div class="chart-skeleton" id="skel-ron" aria-hidden="true">
         <div class="skel-bar" style="height:60%"></div><div class="skel-bar" style="height:75%"></div><div class="skel-bar" style="height:55%"></div><div class="skel-bar" style="height:85%"></div><div class="skel-bar" style="height:70%"></div><div class="skel-bar" style="height:95%"></div><div class="skel-bar" style="height:80%"></div><div class="skel-bar" style="height:65%"></div><div class="skel-bar" style="height:90%"></div><div class="skel-bar" style="height:75%"></div>
       </div>
       <div class="chart-outer">
         <div class="chart-wrap"><canvas id="ronChart"></canvas></div>
       </div>
     </div>
-    <div id="eur-panel" class="chart-panel">
+    <div id="eur-panel" class="chart-panel" role="tabpanel" aria-labelledby="tab-eur">
       <div class="rates-strip" id="fidelis-rates-eur"></div>
       <div class="chart-outer">
         <div class="chart-wrap"><canvas id="eurChart"></canvas></div>
@@ -357,6 +394,10 @@
   <br>Informațiile au caracter informativ și nu constituie recomandare de investiție.
 </footer>
 
+<!-- P1: Chart.js moved here so it doesn't block initial render -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
+        integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt"
+        crossorigin="anonymous"></script>
 <script>
 // ── Colors ───────────────────────────────────────────────────────
 const T_CLR = {1:'#ff6384',2:'#36a2eb',3:'#ffce56',5:'#9966ff'};
@@ -381,7 +422,7 @@ function buildRatesStrip(raw, stripId, colorMap) {
     const label = e.m === '2d' ? '2 ani (dona)' : `${e.m} ${e.m === 1 ? 'an' : 'ani'}`;
     const color = colorMap[e.m] || '#fff';
     return `<span class="rate-pill">
-      <span class="legend-swatch" style="background:${color}"></span>
+      <span class="legend-swatch" aria-hidden="true" style="background:${color}"></span>
       <span class="pill-label">${label}</span>
       <span class="pill-value">${e.r}%</span>
     </span>`;
@@ -396,15 +437,15 @@ Promise.all([
   _eurData = fidelis.eur;
   buildRatesStrip(tezaur,      'tezaur-rates',     T_CLR);
   buildRatesStrip(fidelis.ron, 'fidelis-rates-ron', F_CLR);
-  buildChart(tezaur,       'tezaurChart', T_CLR);
-  buildChart(fidelis.ron,  'ronChart',    F_CLR);
+  buildChart(tezaur,      'tezaurChart', T_CLR, 'Evoluție dobânzi Tezaur RON');
+  buildChart(fidelis.ron, 'ronChart',    F_CLR, 'Evoluție dobânzi Fidelis RON');
 }).catch(err => console.error('Failed to load data:', err));
 
 // ── Chart builder ─────────────────────────────────────────────
-const PX_PER_LABEL = 18; // minimum pixels allocated per x-axis label
+const PX_PER_LABEL = 18;
 const CHART_HEIGHT = 300;
 
-function buildChart(raw, canvasId, colorMap) {
+function buildChart(raw, canvasId, colorMap, ariaLabel) {
   const labels = [];
   raw.forEach(e => { if (!labels.includes(e.d)) labels.push(e.d); });
 
@@ -423,7 +464,18 @@ function buildChart(raw, canvasId, colorMap) {
   const wrap   = canvas.closest('.chart-wrap');
   const outer  = canvas.closest('.chart-outer');
 
-  // Canvas width: at least fill the container, but give each label its own space
+  // A4: canvas accessible label
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', `${ariaLabel}, ${labels[0]} până în ${labels[labels.length - 1]}`);
+
+  // A3: keyboard scroll support
+  wrap.setAttribute('tabindex', '0');
+  wrap.setAttribute('aria-label', `${ariaLabel} — derulați orizontal`);
+  wrap.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { wrap.scrollLeft += 60; e.preventDefault(); }
+    if (e.key === 'ArrowLeft')  { wrap.scrollLeft -= 60; e.preventDefault(); }
+  });
+
   const containerW = outer.clientWidth || window.innerWidth;
   const chartW     = Math.max(containerW, labels.length * PX_PER_LABEL);
 
@@ -431,7 +483,6 @@ function buildChart(raw, canvasId, colorMap) {
   canvas.style.height = CHART_HEIGHT + 'px';
   wrap.style.height   = CHART_HEIGHT + 'px';
 
-  // Fade hint: hide when scrolled to end
   wrap.addEventListener('scroll', () => {
     const atEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 4;
     outer.classList.toggle('scrolled-end', atEnd);
@@ -451,13 +502,17 @@ function buildChart(raw, canvasId, colorMap) {
     borderWidth: 2,
   }));
 
-  // Build fixed HTML legend (sits above the scrollable wrap)
+  // A5: legend with aria-pressed
   const legendEl = document.createElement('div');
   legendEl.className = 'chart-legend';
+  legendEl.setAttribute('role', 'group');
+  legendEl.setAttribute('aria-label', 'Filtrează maturități');
   datasets.forEach((ds, i) => {
     const btn = document.createElement('button');
     btn.className = 'legend-item';
-    btn.innerHTML = `<span class="legend-swatch" style="background:${ds.borderColor}"></span>${ds.label}`;
+    btn.setAttribute('aria-pressed', 'true');
+    btn.setAttribute('aria-label', `Afișează ${ds.label}`);
+    btn.innerHTML = `<span class="legend-swatch" aria-hidden="true" style="background:${ds.borderColor}"></span>${ds.label}`;
     btn.dataset.idx = i;
     legendEl.appendChild(btn);
   });
@@ -485,56 +540,50 @@ function buildChart(raw, canvasId, colorMap) {
       },
       scales: {
         x: {
-          ticks: {
-            color: '#778',
-            maxRotation: 45,
-            minRotation: 30,
-            font: { size: 9 },
-          },
+          ticks: { color: '#778', maxRotation: 45, minRotation: 30, font: { size: 9 } },
           grid: { color: 'rgba(255,255,255,0.08)' },
         },
         y: {
-          ticks: {
-            color: '#778',
-            font: { size: 10 },
-            callback: v => v + '%',
-          },
+          ticks: { color: '#778', font: { size: 10 }, callback: v => v + '%' },
           grid: { color: 'rgba(255,255,255,0.08)' },
         },
       },
     },
   });
 
-  // Scroll to the right (most recent data) after the chart paints, hide skeleton
   requestAnimationFrame(() => {
     wrap.scrollLeft = wrap.scrollWidth;
     const panel = canvas.closest('.chart-panel');
     panel?.querySelector('.chart-skeleton')?.classList.add('hidden');
   });
 
-  // Wire up legend toggle clicks
+  // A5: toggle aria-pressed on legend click
   legendEl.querySelectorAll('.legend-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const i = Number(btn.dataset.idx);
       const visible = chart.isDatasetVisible(i);
       chart.setDatasetVisibility(i, !visible);
       chart.update();
-      btn.classList.toggle('legend-hidden', visible);
+      btn.setAttribute('aria-pressed', String(!visible));
     });
   });
 }
 
-// ── Tab switching (EUR built lazily when tab first opened) ──
+// ── A6: Tab switching with proper ARIA ──
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const card = btn.closest('.fidelis-card');
-    card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    card.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     card.querySelectorAll('.chart-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById(btn.dataset.target).classList.add('active');
-    if (btn.dataset.target === 'eur-panel' && !_eurBuilt && _eurData.length) {
+    btn.setAttribute('aria-selected', 'true');
+    document.getElementById(btn.getAttribute('aria-controls')).classList.add('active');
+    if (btn.id === 'tab-eur' && !_eurBuilt && _eurData.length) {
       buildRatesStrip(_eurData, 'fidelis-rates-eur', F_CLR);
-      buildChart(_eurData, 'eurChart', F_CLR);
+      buildChart(_eurData, 'eurChart', F_CLR, 'Evoluție dobânzi Fidelis EUR');
       _eurBuilt = true;
     }
   });
