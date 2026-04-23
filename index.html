@@ -139,13 +139,39 @@
     .chart-panel { display: none; }
     .chart-panel.active { display: block; }
 
-    .chart-wrap {
+    /* Scrollable chart container */
+    .chart-outer {
       position: relative;
-      height: 360px;
-      padding: 1rem 0.5rem 0.5rem;
     }
-    @media (max-width: 480px) {
-      .chart-wrap { height: 260px; padding: 0.6rem 0 0.25rem; }
+    /* Fade hint on the right when chart overflows */
+    .chart-outer::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 40px; height: 100%;
+      background: linear-gradient(to right, transparent, var(--surface));
+      pointer-events: none;
+      border-radius: 0 0 var(--radius) 0;
+      opacity: 1;
+      transition: opacity 0.2s;
+    }
+    .chart-outer.scrolled-end::after { opacity: 0; }
+
+    .chart-wrap {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      /* height set by JS */
+    }
+    .chart-wrap::-webkit-scrollbar { height: 4px; }
+    .chart-wrap::-webkit-scrollbar-track { background: transparent; }
+    .chart-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .chart-wrap canvas {
+      /* width & height set by JS */
+      display: block;
     }
 
     /* ── Footer ── */
@@ -164,9 +190,8 @@
 <body>
 
 <header>
-  <p class="eyebrow">Ministerul Finanțelor · România</p>
-  <h1>Titluri de <span>Stat</span></h1>
-  <p class="subtitle">Evoluția dobânzilor — Fidelis &amp; Tezaur &nbsp;·&nbsp; <span style="opacity:.65">Evolution of yields</span></p>
+  <h1>Evoluția Dobânzilor</h1>
+  <p class="subtitle">Fidelis &amp; Tezaur · România &nbsp;·&nbsp; <span style="opacity:.6">Bond Yield History</span></p>
 </header>
 
 <main>
@@ -179,7 +204,9 @@
       <span class="badge">Subscriere directă · RON</span>
     </div>
     <div class="chart-panel active">
-      <div class="chart-wrap"><canvas id="tezaurChart"></canvas></div>
+      <div class="chart-outer">
+        <div class="chart-wrap"><canvas id="tezaurChart"></canvas></div>
+      </div>
     </div>
   </article>
 
@@ -195,10 +222,14 @@
       <button class="tab-btn"        data-target="eur-panel">EUR</button>
     </div>
     <div id="ron-panel" class="chart-panel active">
-      <div class="chart-wrap"><canvas id="ronChart"></canvas></div>
+      <div class="chart-outer">
+        <div class="chart-wrap"><canvas id="ronChart"></canvas></div>
+      </div>
     </div>
     <div id="eur-panel" class="chart-panel">
-      <div class="chart-wrap"><canvas id="eurChart"></canvas></div>
+      <div class="chart-outer">
+        <div class="chart-wrap"><canvas id="eurChart"></canvas></div>
+      </div>
     </div>
   </article>
 
@@ -356,6 +387,9 @@ const EUR=[
 ];
 
 // ── Chart builder ─────────────────────────────────────────────
+const PX_PER_LABEL = 18; // minimum pixels allocated per x-axis label
+const CHART_HEIGHT = 300;
+
 function buildChart(raw, canvasId, colorMap) {
   const labels = [];
   raw.forEach(e => { if (!labels.includes(e.d)) labels.push(e.d); });
@@ -371,38 +405,53 @@ function buildChart(raw, canvasId, colorMap) {
     map[e.m][e.d] = e.r;
   });
 
-  const mobile = window.innerWidth < 480;
+  const canvas = document.getElementById(canvasId);
+  const wrap   = canvas.closest('.chart-wrap');
+  const outer  = canvas.closest('.chart-outer');
 
-  const datasets = mats.map(m => ({
-    label: m === '2d' ? '2 ani (dona)' : m + ' ani',
-    data: labels.map(lbl => map[m]?.[lbl] ?? null),
-    borderColor: colorMap[m] || '#fff',
-    backgroundColor: colorMap[m] || '#fff',
-    fill: false,
-    tension: 0.3,
-    pointRadius: labels.map(lbl => map[m]?.[lbl] != null ? (mobile ? 3 : 5) : 0),
-    pointHoverRadius: mobile ? 6 : 8,
-    spanGaps: false,
-    borderWidth: mobile ? 1.5 : 2,
-  }));
+  // Canvas width: at least fill the container, but give each label its own space
+  const containerW = outer.clientWidth || window.innerWidth;
+  const chartW     = Math.max(containerW, labels.length * PX_PER_LABEL);
 
-  new Chart(document.getElementById(canvasId), {
+  canvas.style.width  = chartW + 'px';
+  canvas.style.height = CHART_HEIGHT + 'px';
+  wrap.style.height   = CHART_HEIGHT + 'px';
+
+  // Fade hint: hide when scrolled to end
+  wrap.addEventListener('scroll', () => {
+    const atEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 4;
+    outer.classList.toggle('scrolled-end', atEnd);
+  }, { passive: true });
+  // Hide fade immediately if content fits without scrolling
+  if (chartW <= containerW) outer.classList.add('scrolled-end');
+
+  new Chart(canvas, {
     type: 'line',
-    data: { labels, datasets },
+    data: { labels, datasets: mats.map(m => ({
+      label: m === '2d' ? '2 ani (dona)' : m + ' ani',
+      data: labels.map(lbl => map[m]?.[lbl] ?? null),
+      borderColor: colorMap[m] || '#fff',
+      backgroundColor: colorMap[m] || '#fff',
+      fill: false,
+      tension: 0.3,
+      pointRadius: labels.map(lbl => map[m]?.[lbl] != null ? 4 : 0),
+      pointHoverRadius: 7,
+      spanGaps: false,
+      borderWidth: 2,
+    }))},
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: {
           position: 'top',
           labels: {
             color: '#9aa',
-            font: { size: mobile ? 10 : 12 },
-            boxWidth: mobile ? 10 : 14,
-            padding: mobile ? 6 : 12,
+            font: { size: 11 },
+            boxWidth: 12,
+            padding: 10,
             usePointStyle: true,
-            pointStyleWidth: mobile ? 8 : 12,
+            pointStyleWidth: 10,
           },
         },
         tooltip: {
@@ -423,15 +472,14 @@ function buildChart(raw, canvasId, colorMap) {
             color: '#667',
             maxRotation: 45,
             minRotation: 30,
-            font: { size: mobile ? 8 : 10 },
-            maxTicksLimit: mobile ? 6 : 12,
+            font: { size: 9 },
           },
           grid: { color: 'rgba(255,255,255,0.05)' },
         },
         y: {
           ticks: {
             color: '#667',
-            font: { size: mobile ? 9 : 11 },
+            font: { size: 10 },
             callback: v => v + '%',
           },
           grid: { color: 'rgba(255,255,255,0.05)' },
