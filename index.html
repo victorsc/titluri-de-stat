@@ -17,7 +17,8 @@
   <meta name="twitter:image" content="https://victorsc.github.io/titluri-de-stat/docs/preview.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -589,8 +590,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 </script>
-<!-- GoatCounter analytics — register at goatcounter.com and replace 'REPLACE_ME' with your site code -->
-<script data-goatcounter="https://REPLACE_ME.goatcounter.com/count"
+<script data-goatcounter="https://victorsc.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
