@@ -126,6 +126,37 @@
       white-space: nowrap;
     }
 
+    /* ── Latest rates strip ── */
+    .rates-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 0.5rem;
+      padding: 0.6rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .rate-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .rate-pill .pill-label {
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .rate-pill .pill-value {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
     /* ── Tabs ── */
     .tab-bar {
       display: flex;
@@ -248,6 +279,7 @@
       <h2>Tezaur</h2>
       <span class="badge">Subscriere directă · RON</span>
     </div>
+    <div class="rates-strip" id="tezaur-rates"></div>
     <div class="chart-panel active">
       <div class="chart-outer">
         <div class="chart-wrap"><canvas id="tezaurChart"></canvas></div>
@@ -262,6 +294,7 @@
       <h2>Fidelis</h2>
       <span class="badge">Piață secundară</span>
     </div>
+    <div class="rates-strip" id="fidelis-rates"></div>
     <div class="tab-bar">
       <button class="tab-btn active" data-target="ron-panel">RON</button>
       <button class="tab-btn"        data-target="eur-panel">EUR</button>
@@ -296,11 +329,35 @@ const F_CLR = {1:'#ff6384',2:'#36a2eb',3:'#ffce56',4:'#4bc0c0',5:'#9966ff',6:'#f
 let _eurData = [];
 let _eurBuilt = false;
 
+// ── Latest rates strip ────────────────────────────────────────────
+function buildRatesStrip(raw, stripId, colorMap) {
+  const strip = document.getElementById(stripId);
+  if (!strip) return;
+  const lastDate = raw[raw.length - 1]?.d;
+  if (!lastDate) return;
+  const latest = raw.filter(e => e.d === lastDate)
+    .sort((a, b) => {
+      const n = v => v === '2d' ? 2.5 : Number(v);
+      return n(a.m) - n(b.m);
+    });
+  strip.innerHTML = latest.map(e => {
+    const label = e.m === '2d' ? '2 ani (dona)' : `${e.m} ${e.m === 1 ? 'an' : 'ani'}`;
+    const color = colorMap[e.m] || '#fff';
+    return `<span class="rate-pill">
+      <span class="legend-swatch" style="background:${color}"></span>
+      <span class="pill-label">${label}</span>
+      <span class="pill-value">${e.r}%</span>
+    </span>`;
+  }).join('');
+}
+
 Promise.all([
   fetch('data/tezaur.json').then(r => r.json()),
   fetch('data/fidelis.json').then(r => r.json()),
 ]).then(([tezaur, fidelis]) => {
   _eurData = fidelis.eur;
+  buildRatesStrip(tezaur,      'tezaur-rates',  T_CLR);
+  buildRatesStrip(fidelis.ron, 'fidelis-rates', F_CLR);
   buildChart(tezaur,       'tezaurChart', T_CLR);
   buildChart(fidelis.ron,  'ronChart',    F_CLR);
 }).catch(err => console.error('Failed to load data:', err));
