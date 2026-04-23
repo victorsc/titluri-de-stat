@@ -399,8 +399,8 @@
   <br>Informațiile au caracter informativ și nu constituie recomandare de investiție.
 </footer>
 
-<!-- P1: Chart.js vendored locally to eliminate CDN render-blocking -->
-<script src="vendor/chart.umd.min.js" defer></script>
+<!-- P1: Chart.js vendored locally to eliminate CDN render-blocking; no defer needed, already at end of body -->
+<script src="vendor/chart.umd.min.js"></script>
 <script>
 // ── Colors ───────────────────────────────────────────────────────
 const T_CLR = {1:'#ff6384',2:'#36a2eb',3:'#ffce56',5:'#9966ff'};
