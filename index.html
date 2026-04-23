@@ -330,6 +330,11 @@ let _eurData = [];
 let _eurBuilt = false;
 
 // ── Latest rates strip ────────────────────────────────────────────
+function setLastUpdated(cardSelector, date) {
+  const badge = document.querySelector(`${cardSelector} .badge`);
+  if (badge && date) badge.textContent += ` · ${date}`;
+}
+
 function buildRatesStrip(raw, stripId, colorMap) {
   const strip = document.getElementById(stripId);
   if (!strip) return;
@@ -358,6 +363,8 @@ Promise.all([
   _eurData = fidelis.eur;
   buildRatesStrip(tezaur,      'tezaur-rates',  T_CLR);
   buildRatesStrip(fidelis.ron, 'fidelis-rates', F_CLR);
+  setLastUpdated('.tezaur-card',  tezaur[tezaur.length - 1]?.d);
+  setLastUpdated('.fidelis-card', fidelis.ron[fidelis.ron.length - 1]?.d);
   buildChart(tezaur,       'tezaurChart', T_CLR);
   buildChart(fidelis.ron,  'ronChart',    F_CLR);
 }).catch(err => console.error('Failed to load data:', err));
