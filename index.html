@@ -17,8 +17,10 @@
   <meta name="twitter:image" content="https://victorsc.github.io/titluri-de-stat/docs/preview.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.rel='stylesheet'" />
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" as="style" onload="this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet" /></noscript>
+  <link rel="preload" href="data/tezaur.json" as="fetch" crossorigin="anonymous" />
+  <link rel="preload" href="data/fidelis.json" as="fetch" crossorigin="anonymous" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -516,6 +518,8 @@ function buildChart(raw, canvasId, colorMap, ariaLabel) {
     btn.dataset.idx = i;
     legendEl.appendChild(btn);
   });
+  const panel = canvas.closest('.chart-panel');
+  panel?.querySelector('.chart-skeleton')?.classList.add('hidden');
   outer.insertBefore(legendEl, wrap);
 
   const chart = new Chart(canvas, {
@@ -553,8 +557,6 @@ function buildChart(raw, canvasId, colorMap, ariaLabel) {
 
   requestAnimationFrame(() => {
     wrap.scrollLeft = wrap.scrollWidth;
-    const panel = canvas.closest('.chart-panel');
-    panel?.querySelector('.chart-skeleton')?.classList.add('hidden');
   });
 
   // A5: toggle aria-pressed on legend click
