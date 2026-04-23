@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Europe/Bucharest",
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "pinDigests": true
+    },
+    {
+      "matchManagers": ["npm"],
+      "groupName": "npm dependencies",
+      "rangeStrategy": "pin"
+    }
+  ],
+  "npm": {
+    "lockFileMaintenance": {
+      "enabled": true,
+      "schedule": ["before 6am on the first day of the month"]
+    }
+  }
+}
