@@ -393,6 +393,9 @@ function buildChart(raw, canvasId, colorMap) {
     },
   });
 
+  // Scroll to the right (most recent data) after the chart paints
+  requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
+
   // Wire up legend toggle clicks
   legendEl.querySelectorAll('.legend-item').forEach(btn => {
     btn.addEventListener('click', () => {
