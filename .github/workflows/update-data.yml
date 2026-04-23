@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
           cache-dependency-path: scripts/package.json
 
@@ -36,6 +36,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No new data — skipping commit."
           else
-            git commit -m "chore: auto-update bond data [skip ci]"
+            git commit -m "chore: auto-update bond data $(date +'%Y-%m-%d') [skip ci]"
             git push
           fi
