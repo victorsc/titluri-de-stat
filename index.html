@@ -76,15 +76,6 @@
       padding: 2.75rem 1.25rem 1.5rem;
       border-bottom: 1px solid var(--border);
     }
-    .eyebrow {
-      display: inline-block;
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.55rem;
-    }
     header h1 {
       font-size: clamp(1.5rem, 5vw, 2.4rem);
       font-weight: 700;
@@ -756,11 +747,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const card = btn.closest('.fidelis-card');
     card.querySelectorAll('.tab-btn').forEach(b => {
-      b.classList.remove('active');
       b.setAttribute('aria-selected', 'false');
     });
     card.querySelectorAll('.chart-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
     btn.setAttribute('aria-selected', 'true');
     document.getElementById(btn.getAttribute('aria-controls')).classList.add('active');
     if (btn.id === 'tab-eur' && !_eurBuilt && _eurData.length) {
