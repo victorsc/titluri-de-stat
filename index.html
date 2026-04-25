@@ -617,9 +617,15 @@ function buildDonatoriChart(donData) {
     ...donData.eur.map(e => ({ ...e, ccy: 'eur' })),
   ];
 
-  // Collect all unique date labels in original order
-  const labels = [];
-  tagged.forEach(e => { if (!labels.includes(e.d)) labels.push(e.d); });
+  // Collect all unique date labels sorted chronologically
+  const MONTHS = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const parseDate = d => {
+    const p = d.split(' ');
+    return parseInt(p[p.length - 1]) * 12 + (MONTHS[p[0]] ?? 0);
+  };
+  const labelSet = new Set();
+  tagged.forEach(e => labelSet.add(e.d));
+  const labels = [...labelSet].sort((a, b) => parseDate(a) - parseDate(b));
 
   // Collect unique series keys e.g. "1ron", "2eur"
   const seriesKeys = [...new Set(tagged.map(e => `${e.m}${e.ccy}`))].sort((a, b) => {
