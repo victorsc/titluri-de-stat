@@ -50,11 +50,12 @@ async function scrapeFidelis() {
   const dateLabel = `${roToEn(tm[1])} ${tm[2]}`;
   console.log(`  Fidelis emission: ${dateLabel}`);
 
-  const result = { ron: [], eur: [] };
+  const result = { ron: [], eur: [], donatori: { ron: [], eur: [] } };
 
   $('table').each((tableIdx, table) => {
     if (tableIdx > 1) return false; // only first 2 tables (RON, EUR)
-    const target = tableIdx === 0 ? result.ron : result.eur;
+    const isEur = tableIdx === 1;
+    const target = isEur ? result.eur : result.ron;
 
     $(table).find('tr').each((_, tr) => {
       const tds = $(tr).find('td');
@@ -67,21 +68,23 @@ async function scrapeFidelis() {
         if (mMatch) maturity = parseInt(mMatch[1]);
         // "6,60%"
         if (/^\d+,\d+%$/.test(text)) rate = parseRate(text);
-        if (text === 'Donatori') isDonatori = true;
+        if (/donatori/i.test(text)) isDonatori = true;
       });
 
       if (!maturity || rate == null || isNaN(rate)) return;
 
-      // Blood-donor RON 2-year symbol tracked separately as '2d'
-      const m = (tableIdx === 0 && isDonatori) ? '2d' : maturity;
-      target.push({ d: dateLabel, m, r: rate });
+      if (isDonatori) {
+        result.donatori[isEur ? 'eur' : 'ron'].push({ d: dateLabel, m: maturity, r: rate });
+      } else {
+        target.push({ d: dateLabel, m: maturity, r: rate });
+      }
     });
   });
 
   if (!result.ron.length && !result.eur.length) {
     throw new Error('Fidelis: no data rows found — page structure may have changed');
   }
-  console.log(`  RON: ${result.ron.length} entries, EUR: ${result.eur.length} entries`);
+  console.log(`  RON: ${result.ron.length} entries, EUR: ${result.eur.length} entries, donatori RON: ${result.donatori.ron.length}, EUR: ${result.donatori.eur.length}`);
   return result;
 }
 
@@ -145,6 +148,9 @@ async function main() {
     const scraped  = await scrapeFidelis();
     const existing = readJSON('fidelis.json');
 
+    if (!existing.donatori) existing.donatori = { ron: [], eur: [] };
+    if (!existing.donatori.ron) existing.donatori.ron = [];
+    if (!existing.donatori.eur) existing.donatori.eur = [];
     for (const entry of scraped.ron) {
       if (!isDuplicate(existing.ron, entry)) {
         existing.ron.push(entry);
@@ -156,6 +162,20 @@ async function main() {
       if (!isDuplicate(existing.eur, entry)) {
         existing.eur.push(entry);
         console.log(`  + fidelis.eur  ${entry.d} m=${entry.m} r=${entry.r}`);
+        changed = true;
+      }
+    }
+    for (const entry of scraped.donatori.ron) {
+      if (!isDuplicate(existing.donatori.ron, entry)) {
+        existing.donatori.ron.push(entry);
+        console.log(`  + fidelis.donatori.ron  ${entry.d} m=${entry.m} r=${entry.r}`);
+        changed = true;
+      }
+    }
+    for (const entry of scraped.donatori.eur) {
+      if (!isDuplicate(existing.donatori.eur, entry)) {
+        existing.donatori.eur.push(entry);
+        console.log(`  + fidelis.donatori.eur  ${entry.d} m=${entry.m} r=${entry.r}`);
         changed = true;
       }
     }
