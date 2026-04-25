@@ -319,6 +319,69 @@
       text-underline-offset: 2px;
     }
     footer a:hover { text-decoration-thickness: 2px; }
+
+    /* ── Did you know ── */
+    .did-you-know {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .dyk-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .dyk-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .dyk-shuffle {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.25rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .dyk-shuffle:hover { color: var(--text); border-color: var(--accent); }
+    .dyk-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 600px) {
+      .dyk-cards { grid-template-columns: 1fr; }
+    }
+    .dyk-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .dyk-card-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1.3;
+    }
+    .dyk-card-body {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
   </style>
 </head>
 <body>
@@ -387,6 +450,18 @@
       </div>
     </div>
   </article>
+
+  <!-- Did you know -->
+  <section class="did-you-know" aria-label="Știați că?">
+    <div class="dyk-header">
+      <span class="dyk-label">Știați că?</span>
+      <button class="dyk-shuffle" id="dyk-shuffle-btn" aria-label="Afișează alte fapte">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        Altele
+      </button>
+    </div>
+    <div class="dyk-cards" id="dyk-cards"></div>
+  </section>
 
 </main>
 
@@ -741,6 +816,45 @@ function buildDonatoriChart(donData) {
     });
   });
 }
+
+// ── Did you know ──────────────────────────────────────────────────
+(function () {
+  let facts = [];
+  let shown = [];
+
+  function pickRandom() {
+    const pool = facts.filter((_, i) => !shown.includes(i));
+    const src = pool.length >= 3 ? pool : facts;
+    const picked = [];
+    const indices = [];
+    while (picked.length < 3 && src.length > 0) {
+      const i = Math.floor(Math.random() * src.length);
+      if (!indices.includes(i)) { picked.push(src[i]); indices.push(i); }
+    }
+    shown = facts.map((f, i) => picked.includes(f) ? i : -1).filter(i => i !== -1);
+    return picked;
+  }
+
+  function render() {
+    const container = document.getElementById('dyk-cards');
+    if (!container) return;
+    const cards = pickRandom();
+    container.innerHTML = cards.map(f => `
+      <div class="dyk-card">
+        <div class="dyk-card-title">${f.title}</div>
+        <div class="dyk-card-body">${f.body}</div>
+      </div>`).join('');
+  }
+
+  fetch('data/fun-facts.json')
+    .then(r => r.json())
+    .then(data => {
+      facts = data;
+      render();
+      document.getElementById('dyk-shuffle-btn')?.addEventListener('click', render);
+    })
+    .catch(() => {});
+})();
 
 // ── A6: Tab switching with proper ARIA ──
 document.querySelectorAll('.tab-btn').forEach(btn => {
