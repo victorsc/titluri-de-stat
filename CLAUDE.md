@@ -10,9 +10,13 @@ Live at: https://victorsc.github.io/titluri-de-stat/
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Entire frontend — Chart.js charts, CSS, JS all inline |
-| `data/fidelis.json` | Fidelis RON + EUR historical rates |
+| `index.html` | Page shell — loads Chart.js, app.js, style.css |
+| `style.css` | All site styles |
+| `app.js` | Chart initialization, tab logic, all frontend JS |
+| `vendor/chart.umd.min.js` | Bundled Chart.js 4 (vendored, no CDN) |
+| `data/fidelis.json` | Fidelis RON + EUR + donor historical rates |
 | `data/tezaur.json` | Tezaur RON historical rates |
+| `data/fun-facts.json` | Fun facts shown in the "Did you know" section |
 | `scripts/scrape.js` | Scraper — fetches fidelis.ro, appends new entries |
 | `.github/workflows/update-data.yml` | Runs scraper on 1st & 15th of each month |
 
@@ -21,10 +25,10 @@ Live at: https://victorsc.github.io/titluri-de-stat/
 Every entry in both JSON files: `{ "d": "May 2026", "m": 3, "r": 7.25 }`
 
 - `d` — emission label (`"Mon YYYY"` or `"Mon1–Mon2 YYYY"` for two-month Tezaur)
-- `m` — maturity in years (integer), or `"2d"` for the Fidelis blood-donor bond
+- `m` — maturity in years (integer)
 - `r` — annual rate as float (7.25 = 7.25%)
 
-`fidelis.json` has two top-level arrays: `ron` and `eur`. `tezaur.json` is a flat array.
+`fidelis.json` has three top-level keys: `ron`, `eur`, and `donatori` (itself `{ ron: [], eur: [] }` for blood-donor bonds). `tezaur.json` is a flat array.
 
 ## Chart architecture
 
