@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## Project overview
 
 Static GitHub Pages site charting Romanian government bond yields (Fidelis & Tezaur) from 2020 to present. No framework, no build step — just `index.html`, two JSON data files, and a Node.js scraper.
@@ -25,7 +27,7 @@ Live at: https://victorsc.github.io/titluri-de-stat/
 Every entry in both JSON files: `{ "d": "May 2026", "m": 3, "r": 7.25 }`
 
 - `d` — emission label (`"Mon YYYY"` or `"Mon1–Mon2 YYYY"` for two-month Tezaur)
-- `m` — maturity in years (integer)
+- `m` — maturity in years (integer), or `"2d"` for the Fidelis blood-donor 2-year bond
 - `r` — annual rate as float (7.25 = 7.25%)
 
 `fidelis.json` has three top-level keys: `ron`, `eur`, and `donatori` (itself `{ ron: [], eur: [] }` for blood-donor bonds). `tezaur.json` is a flat array.
@@ -39,10 +41,16 @@ Every entry in both JSON files: `{ "d": "May 2026", "m": 3, "r": 7.25 }`
 - Charts open scrolled to the right (most recent data visible) via `requestAnimationFrame`
 - EUR chart (Fidelis) is lazy-initialized on first tab click
 
+## Running the scraper
+
+```bash
+cd scripts && npm install && node ../scripts/scrape.js
+```
+
 ## Scraper notes
 
 - Source pages: `fidelis.ro/emisiuni` (tables) and `fidelis.ro/tezaur` (rate boxes)
-- Both pages are server-rendered HTML — no headless browser needed
+- Both pages are server-rendered HTML — no headless browser needed (confirmed: no data API endpoints exist)
 - Fidelis date: extracted from `<title>` — "Emisiuni Fidelis [month] [year]"
 - Tezaur date: extracted from heading — "Emisiunea Tezaur [month] [year] - [month] [year]"
 - Deduplication: entries matched by `(d, m)` pair — safe to run multiple times
@@ -52,3 +60,7 @@ Every entry in both JSON files: `{ "d": "May 2026", "m": 3, "r": 7.25 }`
 
 Push to `main` → GitHub Pages rebuilds automatically (no CI needed for the site itself).
 The scraper workflow commits with `[skip ci]` to avoid triggering a redundant Pages build loop.
+
+## Dependency management
+
+Renovate is configured (`renovate.json`) to auto-update GitHub Actions and npm dependencies via PRs, running Monday mornings (Europe/Bucharest). No manual `npm install` is needed for the static site itself — the only `package.json` is under `scripts/`.
