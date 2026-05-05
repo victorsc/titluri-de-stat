@@ -42,8 +42,8 @@ Promise.all([
 }).catch(err => console.error('Failed to load data:', err));
 
 // ── Chart builder ─────────────────────────────────────────────
-const PX_PER_LABEL = 18;
-const CHART_HEIGHT = 300;
+const PX_PER_LABEL = 26;
+const CHART_HEIGHT = 420;
 
 function buildChart(raw, canvasId, colorMap, ariaLabel) {
   const labels = [];
@@ -136,11 +136,11 @@ function buildChart(raw, canvasId, colorMap, ariaLabel) {
       },
       scales: {
         x: {
-          ticks: { color: '#778', maxRotation: 45, minRotation: 30, font: { size: 9 } },
+          ticks: { color: '#778', maxRotation: 45, minRotation: 30, font: { size: 12 } },
           grid: { color: 'rgba(255,255,255,0.08)' },
         },
         y: {
-          ticks: { color: '#778', font: { size: 10 }, callback: v => v + '%' },
+          ticks: { color: '#778', font: { size: 13 }, callback: v => v + '%' },
           grid: { color: 'rgba(255,255,255,0.08)' },
         },
       },
@@ -308,11 +308,11 @@ function buildDonatoriChart(donData) {
       },
       scales: {
         x: {
-          ticks: { color: '#778', maxRotation: 45, minRotation: 30, font: { size: 9 } },
+          ticks: { color: '#778', maxRotation: 45, minRotation: 30, font: { size: 12 } },
           grid: { color: 'rgba(255,255,255,0.08)' },
         },
         y: {
-          ticks: { color: '#778', font: { size: 10 }, callback: v => v + '%' },
+          ticks: { color: '#778', font: { size: 13 }, callback: v => v + '%' },
           grid: { color: 'rgba(255,255,255,0.08)' },
         },
       },
