@@ -155,7 +155,7 @@ main {
 .tab-bar {
   display: flex;
   gap: 0.4rem;
-  padding: 0.65rem 1.25rem 0;
+  padding: 0.65rem 1.25rem 0.65rem;
   border-bottom: 1px solid var(--border);
 }
 .tab-btn {
