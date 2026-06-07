@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Piața Secundară Fidelis — Titluri de Stat România</title>
+  <meta name="description" content="Screener și consilier financiar pentru obligațiunile Fidelis tranzacționate pe piața secundară BVB." />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" as="style" onload="this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet" /></noscript>
+  <link rel="preload" href="data/fidelis_yields.json" as="fetch" crossorigin="anonymous" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Sari la conținut</a>
+
+<header class="piata-page-header">
+  <a href="index.html" class="back-link">← Înapoi</a>
+  <div class="piata-header-center">
+    <h1>Piața Secundară Fidelis</h1>
+    <p class="subtitle">Obligațiuni de stat tranzacționate la BVB &nbsp;·&nbsp; <span class="subtitle-secondary">Secondary Market Screener</span></p>
+  </div>
+  <span id="freshness-badge" class="freshness-pill" hidden></span>
+</header>
+
+<main id="main-content">
+
+  <!-- Load error (hidden by default) -->
+  <div id="load-error" class="alert-error" hidden>
+    Nu s-au putut încărca datele pieței. Încearcă să reîncarci pagina.
+  </div>
+
+  <!-- ===== DESPRE ===== -->
+  <section class="despre-section" aria-label="Informații despre piața secundară">
+    <h2 class="section-label">Despre această pagină</h2>
+
+    <details class="accordion" open>
+      <summary>Ce este piața secundară Fidelis?</summary>
+      <div class="accordion-body">
+        <p>Obligațiunile Fidelis emise de Ministerul Finanțelor sunt listate la <strong>Bursa de Valori București (BVB)</strong> după emisiune. Astfel, le poți cumpăra sau vinde <em>înainte de scadență</em>, la prețul pieței — aceasta este piața secundară.</p>
+        <p>Prețul oscilează în funcție de cerere, ofertă și evoluția dobânzilor de pe piață. Când dobânzile de pe piață cresc, prețul obligațiunilor existente (cu cupon mai mic) scade, și invers.</p>
+        <p>Datele sunt furnizate de <a href="https://fidelis.pacalab.ro" target="_blank" rel="noopener noreferrer">fidelis.pacalab.ro</a> și se actualizează zilnic după închiderea BVB.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Cum citesc tabelul?</summary>
+      <div class="accordion-body">
+        <dl class="field-glossary">
+          <dt>Cupon</dt>
+          <dd>Rata nominală anuală a dobânzii, ca % din valoarea nominală. Acesta este randamentul dacă ai cumpărat la emisiune și ții până la scadență.</dd>
+          <dt>AskYTM</dt>
+          <dd><strong>Randamentul la maturitate (Yield to Maturity)</strong> dacă cumperi azi la prețul Ask. Include comisionul brokerului (0,05% pentru emisiuni înainte de feb. 2025, 0,10% de atunci). Acesta este randamentul real al investiției tale.</dd>
+          <dt>BidYTM</dt>
+          <dd>YTM la prețul Bid — relevant când vrei să <em>vinzi</em>. Cumpărătorul de pe piață ar obține acest randament.</dd>
+          <dt>Spread (BidYTM − AskYTM)</dt>
+          <dd>Diferența dintre cele două randamente. Un spread mic înseamnă piață lichidă (ușor de tranzacționat). Un spread mare (&gt;1%) semnalează că obligațiunea este slab tranzacționată — risc de a nu găsi contrapartidă.</dd>
+          <dt>Preț Ask</dt>
+          <dd>Prețul <em>curat</em> (fără cupon acumulat), ca % din valoarea nominală. La 100 plătești exact valoarea nominală. Prețul efectiv pe care îl plătești este <strong>prețul murdar</strong> = preț curat + cupon acumulat.</dd>
+          <dt>Cupon acumulat</dt>
+          <dd>Dobânda acumulată de la ultimul cupon anual până azi. La cumpărare, plătești vânzătorului și acest cupon acumulat (el ți-l returnează implicit când primești cuponul întreg la scadența anuală).</dd>
+        </dl>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Cum sunt scorate obligațiunile?</summary>
+      <div class="accordion-body">
+        <p>Obligațiunile sunt grupate pe <strong>benzi de scadență</strong> (0–1 an, 1–2 ani, 2–3 ani, 3–5 ani, 5+ ani) și pe monedă (RON / EUR). În cadrul fiecărei benzi:</p>
+        <ul>
+          <li><strong>Oportunitate</strong> — AskYTM în primul sfert (top 25%) față de obligațiunile similare ca scadență. Randament ridicat relativ la alternative comparabile.</li>
+          <li><strong>Corect</strong> — AskYTM în intervalul median (mijlocul 50%). Prețul reflectă corect piața.</li>
+          <li><strong>Supraevaluat</strong> — AskYTM în ultimul sfert (bottom 25%). Obligațiunea costă mai mult decât alternativele cu scadență similară.</li>
+          <li><strong>Nelichid</strong> — Spread BidYTM − AskYTM &gt; 1%. Piață slab tranzacționată, indiferent de etichetă.</li>
+        </ul>
+        <p>Semnalul de vânzare din portofoliu se declanșează când există o alternativă cu AskYTM mai mare cu cel puțin 0,5% față de BidYTM-ul obligațiunii tale — pragul acoperă costul tur-retur al tranzacției.</p>
+        <p class="disclaimer-note">Comisioanele brokerului (0,05% / 0,10%) sunt deja incluse în valorile YTM afișate, conform metodologiei sursei.</p>
+        <p class="disclaimer-note">Cuponul obligațiunilor de stat este <strong>scutit de impozit</strong> pentru persoanele fizice rezidente în România. Câștigul de capital la vânzare înainte de scadență poate fi impozabil — consultați un consultant fiscal.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== EMISIUNI VIITOARE ===== -->
+  <article class="card piata-card" id="upcoming-section" aria-labelledby="upcoming-title">
+    <div class="card-header">
+      <span class="dot piata-dot" aria-hidden="true"></span>
+      <h2 id="upcoming-title">Emisiuni Viitoare</h2>
+      <span class="badge">Subscriere în curs</span>
+    </div>
+    <p class="card-intro">
+      Comparatie intre subscrierea la par si obligatiunile lichide disponibile pe piata secundara cu maturitate similara (±4 luni). Diferenta de castig calculata pentru 10.000 RON/EUR, tinut pana la maturitate, cu toate comisioanele incluse in AskYTM.
+    </p>
+    <div class="table-wrap">
+      <table class="market-table">
+        <thead>
+          <tr>
+            <th>Simbol</th>
+            <th>Moneda</th>
+            <th>Maturitate</th>
+            <th>Scadentă</th>
+            <th>Cupon subscriere <button class="tip-btn" type="button" data-tip="Randamentul la maturitate al subscrierii la par (prețul 100). Egal cu cuponul nominal.">ⓘ</button></th>
+            <th>Comparatie piata secundara <button class="tip-btn" type="button" data-tip="Obligatiuni lichide (spread ≤1%) cu maturitate ±4 luni fata de noua emisie. AskYTM include pretul murdar si comisionul brokerului. Diferenta de castig calculata pentru 10.000 RON/EUR tinut pana la maturitate.">ⓘ</button></th>
+          </tr>
+        </thead>
+        <tbody id="upcoming-body"></tbody>
+      </table>
+    </div>
+  </article>
+
+  <!-- ===== SCREENER ===== -->
+  <article class="card piata-card" aria-labelledby="screener-title">
+    <div class="card-header">
+      <span class="dot piata-dot" aria-hidden="true"></span>
+      <h2 id="screener-title">Screener — Piață Secundară</h2>
+      <span class="badge">BVB Live</span>
+    </div>
+    <div class="tab-bar" role="tablist" aria-label="Monedă screener">
+      <button class="tab-btn" role="tab" id="stab-ron" aria-selected="true"  aria-controls="s-ron-panel">RON</button>
+      <button class="tab-btn" role="tab" id="stab-eur" aria-selected="false" aria-controls="s-eur-panel">EUR</button>
+    </div>
+    <div id="s-ron-panel" class="tab-panel active" role="tabpanel" aria-labelledby="stab-ron">
+      <!-- populated by market.js -->
+    </div>
+    <div id="s-eur-panel" class="tab-panel" role="tabpanel" aria-labelledby="stab-eur">
+      <!-- populated by market.js -->
+    </div>
+  </article>
+
+  <!-- ===== PORTOFOLIU ===== -->
+  <article class="card piata-card" aria-labelledby="portfolio-title">
+    <div class="card-header">
+      <span class="dot piata-dot" aria-hidden="true"></span>
+      <h2 id="portfolio-title">Portofoliu Personal</h2>
+      <span class="badge">Salvat local</span>
+    </div>
+
+    <div class="portfolio-intro">
+      <p>Simulare pentru 10.000 RON/EUR subscrise la emisie, cu cupoanele anuale incasate. Arata daca are sens sa vinzi azi pe piata secundara.</p>
+      <p class="disclaimer-note">Datele sunt salvate exclusiv în browser-ul tău (localStorage). Nu sunt trimise nicăieri.</p>
+    </div>
+
+    <!-- Add holding form -->
+    <div class="add-holding-wrap">
+      <h3 class="form-title">Adaugă subscriptie</h3>
+      <form id="add-holding-form" class="add-holding-form" novalidate>
+        <div class="form-row form-row-inline">
+          <label for="h-symbol">Simbol</label>
+          <input type="text" id="h-symbol" list="symbols-list" placeholder="ex: R2608A" autocomplete="off" required />
+          <datalist id="symbols-list"></datalist>
+          <button type="submit" class="btn-primary">Adauga</button>
+        </div>
+        <div id="form-error" class="form-error" hidden></div>
+      </form>
+    </div>
+
+    <!-- Holdings list -->
+    <div class="tab-bar" role="tablist" aria-label="Monedă portofoliu">
+      <button class="tab-btn" role="tab" id="ptab-ron" aria-selected="true"  aria-controls="p-ron-panel">RON</button>
+      <button class="tab-btn" role="tab" id="ptab-eur" aria-selected="false" aria-controls="p-eur-panel">EUR</button>
+    </div>
+    <div id="p-ron-panel" class="tab-panel active" role="tabpanel" aria-labelledby="ptab-ron">
+      <div class="holdings-list"></div>
+    </div>
+    <div id="p-eur-panel" class="tab-panel" role="tabpanel" aria-labelledby="ptab-eur">
+      <div class="holdings-list"></div>
+    </div>
+  </article>
+
+</main>
+
+<footer>
+  Date piata secundara furnizate de
+  <a href="https://fidelis.pacalab.ro" target="_blank" rel="noopener noreferrer">fidelis.pacalab.ro</a>
+  &nbsp;·&nbsp; Date istorice de la
+  <a href="https://www.mfinante.gov.ro" target="_blank" rel="noopener noreferrer">Ministerul Finanțelor</a>
+  <br>Informațiile au caracter informativ și nu constituie recomandare de investiție.
+</footer>
+
+<script src="market.js"></script>
+<script data-goatcounter="https://victorsc.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

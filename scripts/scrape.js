@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_DIR  = join(__dirname, '..', 'data');
+const DATA_DIR  = join(__dirname, '..', 'public', 'data');
 const UA = 'Mozilla/5.0 (compatible; titluri-de-stat-bot/1.0)';
 
 // Romanian month → English abbreviation
