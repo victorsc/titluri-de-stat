@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   fetch:
@@ -32,4 +33,5 @@ jobs:
           else
             git commit -m "chore: auto-update market data $(date +'%Y-%m-%d') [skip ci]"
             git push
+            gh workflow run deploy.yml --ref main
           fi
