@@ -4,7 +4,7 @@ Interactive charts tracking the evolution of Romanian government bond yields (Fi
 
 **Live site:** https://victorsc.github.io/titluri-de-stat/
 
-![Preview](docs/preview.png)
+![Preview](public/docs/preview.png)
 
 ---
 
