@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8" />
+<title>brag stage</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=block" />
+<style>
+  :root { --bg:#0d0f14; --surface:#151820; --border:#252a35; --text:#e2e8f0; --muted:#8896a8; --accent:#4f8ef7; --green:#34d399; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+  body { font-family: Inter, sans-serif; color: var(--text); position: relative; -webkit-font-smoothing: antialiased; }
+  .layer { position: absolute; inset: 0; }
+
+  /* background glows */
+  #bg { background:
+      radial-gradient(900px 600px at 12% 8%, rgba(79,142,247,.16), transparent 70%),
+      radial-gradient(900px 600px at 92% 100%, rgba(52,211,153,.11), transparent 70%),
+      var(--bg); }
+  #grid { background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+          background-size: 80px 80px; -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%); }
+
+  /* scene 1 */
+  #hook { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #spark { position: absolute; left: 0; top: 800px; width: 1920px; height: 280px; overflow: visible; }
+  #kickerWrap { height: 44px; overflow: hidden; position: relative; width: 900px; margin-bottom: 6px; }
+  .kicker { position: absolute; inset: 0; text-align: center; font-size: 32px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .kicker b { color: var(--text); font-weight: 700; }
+  .kicker .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 16px; vertical-align: 2px; }
+  #num { font-size: 300px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; font-variant-numeric: tabular-nums; position: relative; }
+  #num .pct { font-size: 170px; margin-left: 8px; letter-spacing: 0; opacity: .85; }
+  #hookLine { margin-top: 34px; font-size: 52px; font-weight: 600; letter-spacing: -0.015em; color: var(--text); }
+
+  /* browser frame */
+  #captionWrap { position: absolute; left: 0; right: 0; top: 52px; height: 90px; }
+  .caption { position: absolute; left: 0; right: 0; text-align: center; font-size: 56px; font-weight: 700; letter-spacing: -0.025em; }
+  .caption em { font-style: normal; color: var(--accent); }
+  .caption .g { color: var(--green); }
+  #frame { position: absolute; left: 230px; top: 172px; width: 1460px; height: 866px; border-radius: 16px; overflow: hidden;
+           background: var(--surface); border: 1px solid #2e3442;
+           box-shadow: 0 40px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.02), 0 -1px 0 rgba(255,255,255,.06) inset; transform-origin: 50% 40%; }
+  #bar { height: 44px; display: flex; align-items: center; padding: 0 18px; gap: 9px; background: #12151c; border-bottom: 1px solid var(--border); position: relative; }
+  #bar i { width: 13px; height: 13px; border-radius: 50%; background: #2a303c; display: block; }
+  #url { position: absolute; left: 50%; transform: translateX(-50%); height: 28px; padding: 0 18px; border-radius: 8px; background: #1b1f29;
+         display: flex; align-items: center; gap: 9px; font-size: 15px; color: var(--muted); white-space: nowrap; }
+  #url b { color: var(--text); font-weight: 500; }
+  #viewport { position: relative; width: 1459px; height: 821px; overflow: hidden; background: var(--bg); }
+  #viewport iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform: scale(.76); transform-origin: 0 0; background: var(--bg); }
+
+  #cursor { position: absolute; left: 0; top: 0; width: 40px; height: 40px; pointer-events: none; transform-origin: 6px 4px; filter: drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
+  #ripple { position: absolute; width: 80px; height: 80px; margin: -40px 0 0 -40px; border-radius: 50%; border: 3px solid var(--accent); opacity: 0; }
+
+  /* outro */
+  #outro { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #logo { width: 150px; height: 150px; margin-bottom: 44px; border-radius: 30px; box-shadow: 0 24px 80px rgba(79,142,247,.25); }
+  #oTitle { font-size: 128px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; }
+  #oSub { margin-top: 18px; font-size: 42px; font-weight: 500; color: var(--muted); }
+  #oUrl { margin-top: 56px; font-size: 38px; font-weight: 600; color: var(--accent); padding: 18px 40px; border-radius: 999px;
+          border: 2px solid rgba(79,142,247,.55); background: rgba(79,142,247,.08); }
+</style>
+</head>
+<body>
+<div id="bg" class="layer"></div>
+<div id="grid" class="layer"></div>
+
+<!-- Scene 1: hook -->
+<div id="hook" class="layer">
+  <svg id="spark" viewBox="0 0 1600 280" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="sg" x1="0" x2="1"><stop offset="0" stop-color="#4f8ef7"/><stop offset="1" stop-color="#34d399"/></linearGradient>
+      <linearGradient id="sf" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4f8ef7" stop-opacity=".16"/><stop offset="1" stop-color="#4f8ef7" stop-opacity="0"/></linearGradient>
+      <clipPath id="sclip"><rect id="sclipRect" x="0" y="-50" width="0" height="900"/></clipPath>
+    </defs>
+    <g clip-path="url(#sclip)">
+      <path id="sparkFill" fill="url(#sf)"/>
+      <path id="sparkLine" fill="none" stroke="url(#sg)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <circle id="sparkDot" r="9" fill="#34d399"/>
+  </svg>
+  <div id="kickerWrap">
+    <div class="kicker" id="k1"><span class="dot" style="background:#4f8ef7;box-shadow:0 0 12px #4f8ef7"></span><b>Fidelis</b> · martie 2021</div>
+    <div class="kicker" id="k2"><span class="dot" style="background:#34d399;box-shadow:0 0 12px #34d399"></span><b>Tezaur</b> · noiembrie 2022</div>
+  </div>
+  <div id="num"><span id="numV">2.85</span><span class="pct">%</span></div>
+  <div id="hookLine">Titluri de stat românești, în 20 de luni.</div>
+</div>
+
+<!-- Scenes 2–4: the real site in a browser frame -->
+<div id="captionWrap">
+  <div class="caption" id="c1">Fiecare emisiune <em>Fidelis</em> și <span class="g">Tezaur</span>, din 2020.</div>
+  <div class="caption" id="c2">În lei, în euro și pentru <em>donatorii de sânge</em>.</div>
+  <div class="caption" id="c3">Piața secundară BVB, <span class="g">scorată zilnic</span>.</div>
+</div>
+<div id="frame">
+  <div id="bar"><i></i><i></i><i></i>
+    <div id="url"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8896a8" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span><b>victorsc.github.io</b>/titluri-de-stat/<span id="urlPath"></span></span></div>
+  </div>
+  <div id="viewport">
+    <iframe id="fIndex" src="/public/index.html"></iframe>
+    <iframe id="fMarket" src="/public/market.html"></iframe>
+  </div>
+</div>
+<div id="ripple"></div>
+<svg id="cursor" viewBox="0 0 40 40"><path d="M6 4 L6 32 L13.5 25 L18.5 36 L23 34 L18 23.5 L28 23.5 Z" fill="#fff" stroke="#0d0f14" stroke-width="2.2" stroke-linejoin="round"/></svg>
+
+<!-- Scene 5: outro -->
+<div id="outro" class="layer">
+  <svg id="logo" viewBox="0 0 32 32">
+    <rect width="32" height="32" rx="6" fill="#151820" stroke="#252a35" stroke-width=".5"/>
+    <polyline id="lg1" points="3,24 9,18 14,20 20,11 27,6" fill="none" stroke="#4f8ef7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" />
+    <polyline id="lg2" points="20,11 27,6" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" />
+  </svg>
+  <div id="oTitle">Evoluția Dobânzilor</div>
+  <div id="oSub">Fidelis &amp; Tezaur · România</div>
+  <div id="oUrl">victorsc.github.io/titluri-de-stat</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const eOut = k => 1 - Math.pow(1 - k, 3);
+const eInOut = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const eBack = k => { const c = 1.6; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
+const VX = 231, VY = 173 + 44; // viewport origin on stage
+let cam = { z: .76, x: 0 };
+function setCam(t) { const z = lerp(.76, .95, eInOut(prog(t, 7.45, 8.3))); cam = { z, x: (1459 - 1920 * z) / 2 };
+  for (const f of document.querySelectorAll('#viewport iframe')) f.style.transform = `translateX(${cam.x}px) scale(${z})`; }
+
+// fade+slide in at a, out at b
+function inOut(el, t, a, b, dy = 18, din = .38, dout = .22) {
+  const i = eOut(prog(t, a, a + din)), o = prog(t, b - dout, b);
+  el.style.opacity = i * (1 - o);
+  el.style.transform = `translateY(${(1 - i) * dy - o * dy * .7}px)`;
+}
+
+// ---------- real data for the hook sparkline ----------
+const MON = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+function monthIdx(d) { const m = d.match(/^(\w{3}).*?(\d{4})$/); return m ? (+m[2]) * 12 + MON[m[1]] : null; }
+let spark = [];
+async function buildSpark() {
+  const [tz, fd] = await Promise.all([fetch('/public/data/tezaur.json').then(r => r.json()), fetch('/public/data/fidelis.json').then(r => r.json())]);
+  const best = {};
+  for (const e of [...tz, ...fd.ron]) { if (typeof e.m !== 'number') continue; const k = monthIdx(e.d); if (k == null) continue; best[k] = Math.max(best[k] || 0, e.r); }
+  const a = 2021 * 12 + 2, b = 2022 * 12 + 10;   // Mar 2021 .. Nov 2022
+  const keys = Object.keys(best).map(Number).filter(k => k >= a && k <= b).sort((x, y) => x - y);
+  // start exactly at the Fidelis Mar 2021 low (2.85%), end at the Tezaur Nov 2022 peak (9.15%)
+  spark = keys.map(k => [k, best[k]]);
+  const X = k => (k - a) / (b - a) * 1600, Y = r => 270 - (r - 2.5) / 7 * 240;
+  const pts = spark.map(([k, r]) => [X(k), Y(r)]);
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], cx = (x0 + x1) / 2; d += ` C${cx},${y0} ${cx},${y1} ${x1},${y1}`; }
+  $('sparkLine').setAttribute('d', d);
+  $('sparkFill').setAttribute('d', d + ` L1600,300 L0,300 Z`);
+  spark.pts = pts;
+}
+function sparkYAt(x) { const p = spark.pts; for (let i = 1; i < p.length; i++) if (x <= p[i][0]) { const k = (x - p[i-1][0]) / (p[i][0] - p[i-1][0]); const s = (1 - Math.cos(Math.PI * k)) / 2; return lerp(p[i-1][1], p[i][1], s); } return p[p.length-1][1]; }
+
+// ---------- iframe helpers ----------
+const fi = () => $('fIndex').contentWindow, fm = () => $('fMarket').contentWindow;
+function rectIn(win, sel) { const el = win.document.querySelector(sel); const r = el.getBoundingClientRect(); return { x: VX + cam.x + r.left * cam.z, y: VY + r.top * cam.z, w: r.width * cam.z, h: r.height * cam.z }; }
+let geo = {};
+
+window.ready = (async () => {
+  await buildSpark();
+  await document.fonts.ready;
+  const waitFor = async (fn) => { for (let i = 0; i < 400; i++) { try { if (fn()) return; } catch {} await new Promise(r => setTimeout(r, 50)); } throw new Error('timeout ' + fn); };
+  await waitFor(() => fi().document.readyState === 'complete' && fi().document.querySelector('#ronChart').width > 0 && fi().document.querySelector('#tezaur-rates .rate-pill'));
+  await waitFor(() => fm().document.readyState === 'complete' && fm().document.querySelectorAll('#s-ron-panel tbody tr').length > 10);
+  await fi().document.fonts.ready; await fm().document.fonts.ready;
+  // geometry measured with each page at its target scroll
+  const iw = fi();
+  iw.scrollTo(0, 99999); geo.idxMaxY = iw.scrollY;
+  const mw = fm(), sc = mw.document.querySelector('#screener-title').closest('article');
+  mw.scrollTo(0, 0); geo.scrTop = sc.getBoundingClientRect().top + mw.scrollY - 24;
+  // rows with Oportunitate in the first screenful
+  mw.scrollTo(0, geo.scrTop);
+  const rows = [...mw.document.querySelectorAll('#s-ron-panel tbody tr')];
+  geo.hlRows = rows.filter(tr => tr.querySelector('.pill-good') && tr.getBoundingClientRect().top < 1000 && tr.getBoundingClientRect().top > 150);
+  const st = mw.document.createElement('style');
+  st.textContent = `tr.brag-hl td { background: rgba(52,211,153,.10) !important; } tr.brag-hl td:first-child { box-shadow: inset 4px 0 0 #34d399; }
+                    tr .pill-good { display:inline-block; }`;
+  mw.document.head.appendChild(st);
+  return true;
+})();
+
+// ---------- cursor path (stage coords) ----------
+function tabPos(id) { const r = rectIn(fi(), '#' + id); return [r.x + r.w * .55, r.y + r.h * .62]; }
+function cursorAt(t) {
+  const eur = tabPos('tab-eur'), don = tabPos('tab-don');
+  const start = [1500, 900];
+  const keys = [[7.95, start], [8.85, eur], [9.75, eur], [10.45, don], [11.6, don]];
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) {
+    const [t0, p0] = keys[i - 1], [t1, p1] = keys[i]; const k = eInOut(prog(t, t0, t1));
+    const arc = Math.sin(k * Math.PI) * -40 * (p0[0] === p1[0] ? 0 : 1);
+    return [lerp(p0[0], p1[0], k), lerp(p0[1], p1[1], k) + arc];
+  }
+  return keys[keys.length - 1][1];
+}
+const CLICKS = [8.95, 10.55];
+
+window.render = function (t) {
+  setCam(t);
+  // ---------- scene 1: hook (0 – 3.0) ----------
+  const hk = $('hook');
+  const hOut = eInOut(prog(t, 2.7, 3.0));
+  hk.style.opacity = 1 - hOut;
+  hk.style.transform = `scale(${1 + hOut * .06})`;
+  hk.style.filter = `blur(${hOut * 10}px)`;
+  hk.style.visibility = t > 3.05 ? 'hidden' : 'visible';
+  const nIn = eOut(prog(t, 0, .35));
+  const c = eInOut(prog(t, .3, 1.75));
+  $('num').style.opacity = nIn;
+  $('num').style.transform = `translateY(${(1 - nIn) * 30}px) scale(${1 + (eBack(prog(t, 1.75, 2.05)) - prog(t, 1.75, 2.05)) * .25 + .0})`;
+  $('numV').textContent = lerp(2.85, 9.15, c).toFixed(2);
+  const col = (a, b) => `rgb(${a.map((v, i) => Math.round(lerp(v, b[i], c))).join(',')})`;
+  $('num').style.color = col([226, 232, 240], [52, 211, 153]);
+  const kSwap = eInOut(prog(t, 1.6, 1.9));
+  $('k1').style.transform = `translateY(${-kSwap * 44}px)`; $('k1').style.opacity = (1 - kSwap) * eOut(prog(t, .05, .4));
+  $('k2').style.transform = `translateY(${(1 - kSwap) * 44}px)`; $('k2').style.opacity = kSwap;
+  inOut($('hookLine'), t, .25, 99, 22);
+  const sx = c * 1600;
+  $('sclipRect').setAttribute('width', sx + 2);
+  $('spark').style.opacity = .75 * eOut(prog(t, .2, .5));
+  $('sparkDot').setAttribute('cx', sx); $('sparkDot').setAttribute('cy', sparkYAt(sx));
+  $('sparkDot').setAttribute('r', 9 + 8 * Math.max(0, Math.sin(prog(t, 1.75, 2.2) * Math.PI)));
+
+  // ---------- browser frame (3.0 – 16.0) ----------
+  const fr = $('frame');
+  const fIn = eOut(prog(t, 3.0, 3.6)), fOut = eInOut(prog(t, 15.85, 16.25));
+  fr.style.opacity = fIn * (1 - fOut);
+  fr.style.transform = `translateY(${(1 - fIn) * 90}px) scale(${lerp(.96, 1, fIn) - fOut * .06})`;
+  fr.style.visibility = (t < 2.99 || t > 16.3) ? 'hidden' : 'visible';
+  $('captionWrap').style.visibility = fr.style.visibility;
+  inOut($('c1'), t, 3.2, 7.4);
+  inOut($('c2'), t, 7.55, 11.4);
+  inOut($('c3'), t, 11.75, 15.95);
+
+  // index page: Tezaur chart sweeps 2020 → today, then page scrolls to Fidelis
+  const iw = fi(), id = iw.document;
+  const tw = id.querySelector('#tezaurChart').closest('.chart-wrap');
+  tw.scrollLeft = (tw.scrollWidth - tw.clientWidth) * eInOut(prog(t, 3.45, 6.9));
+  iw.scrollTo(0, Math.round(geo.idxMaxY * eInOut(prog(t, 7.45, 8.2))));
+  const want = t >= CLICKS[1] ? 'tab-don' : t >= CLICKS[0] ? 'tab-eur' : 'tab-ron';
+  const btn = id.getElementById(want);
+  if (btn.getAttribute('aria-selected') !== 'true') btn.click();
+  for (const p of id.querySelectorAll('.chart-panel .chart-wrap')) if (p.closest('#eur-panel, #don-panel')) p.scrollLeft = p.scrollWidth;
+
+  // cross-dip to market page at 11.5
+  const dipOut = prog(t, 11.3, 11.5), dipIn = eOut(prog(t, 11.55, 11.85));
+  $('fIndex').style.opacity = 1 - dipOut;
+  $('fMarket').style.opacity = dipIn;
+  $('fIndex').style.visibility = t < 11.55 ? 'visible' : 'hidden';
+  $('fMarket').style.visibility = t >= 11.5 ? 'visible' : 'hidden';
+  $('urlPath').textContent = t >= 11.5 ? 'market.html' : '';
+  const mw = fm();
+  mw.scrollTo(0, Math.round(geo.scrTop + 160 * eInOut(prog(t, 11.5, 15.9))));
+  geo.hlRows.forEach((tr, i) => {
+    const ta = 12.35 + i * .22;
+    tr.classList.toggle('brag-hl', t >= ta);
+    const pill = tr.querySelector('.pill-good');
+    const b = prog(t, ta, ta + .3);
+    pill.style.transform = `scale(${1 + Math.sin(b * Math.PI) * .22})`;
+  });
+
+  // cursor
+  const cur = $('cursor'), cOn = eOut(prog(t, 7.95, 8.25)) * (1 - prog(t, 11.15, 11.4));
+  const [cx, cy] = cursorAt(t);
+  let press = 0, rip = null;
+  for (const ck of CLICKS) { const k = prog(t, ck - .08, ck + .14); press = Math.max(press, Math.sin(k * Math.PI)); if (t >= ck && t < ck + .5) rip = prog(t, ck, ck + .5); }
+  cur.style.opacity = cOn;
+  cur.style.transform = `translate(${cx - 6}px, ${cy - 4}px) scale(${1 - press * .15})`;
+  const rp = $('ripple');
+  if (rip != null) { rp.style.left = cx + 'px'; rp.style.top = cy + 'px'; rp.style.opacity = (1 - rip) * .9; rp.style.transform = `scale(${.3 + eOut(rip) * .9})`; }
+  else rp.style.opacity = 0;
+
+  // ---------- scene 5: outro (16.0 – 20.0) ----------
+  const o = $('outro');
+  o.style.visibility = t > 15.9 ? 'visible' : 'hidden';
+  const lg = eOut(prog(t, 16.05, 16.55));
+  $('logo').style.opacity = lg; $('logo').style.transform = `translateY(${(1 - lg) * 30}px) scale(${lerp(.85, 1, eBack(prog(t, 16.05, 16.55)))})`;
+  $('lg1').style.strokeDashoffset = 1 - eInOut(prog(t, 16.2, 16.9));
+  $('lg2').style.strokeDashoffset = 1 - eInOut(prog(t, 16.75, 17.05));
+  inOut($('oTitle'), t, 16.25, 99, 30, .45);
+  inOut($('oSub'), t, 16.45, 99, 24, .45);
+  const u = eOut(prog(t, 16.7, 17.15));
+  $('oUrl').style.opacity = u; $('oUrl').style.transform = `translateY(${(1 - u) * 24}px) scale(${lerp(.92, 1, eBack(prog(t, 16.7, 17.15)))})`;
+  $('oUrl').style.boxShadow = `0 0 ${40 * Math.sin(prog(t, 17.0, 18.0) * Math.PI)}px rgba(79,142,247,.45)`;
+};
+</script>
+</body>
+</html>
