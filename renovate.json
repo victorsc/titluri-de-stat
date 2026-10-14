@@ -20,5 +20,15 @@
       "enabled": true,
       "schedule": ["before 6am on the first day of the month"]
     }
-  }
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Vendored Chart.js: version read from the license banner; refresh-vendor.yml downloads the matching file",
+      "managerFilePatterns": ["/^public/vendor/chart\\.umd\\.min\\.js$/"],
+      "matchStrings": ["\\* Chart\\.js v(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "chart.js",
+      "datasourceTemplate": "npm"
+    }
+  ]
 }
