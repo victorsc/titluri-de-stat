@@ -149,6 +149,11 @@ function parseEmissionDate(label) {
   return new Date(parseInt(m[2]), mi, 1);
 }
 
+// Quotes with a bid/ask YTM spread above 1pp are treated as stale/illiquid.
+function isLiquid(s) {
+  return Number.isFinite(s.BidYTM) && Number.isFinite(s.AskYTM) && (s.BidYTM - s.AskYTM) <= 1.0;
+}
+
 // ===== Buy Label Computation =====
 function computeBuyLabels(issued) {
   const groups = {};
@@ -168,7 +173,7 @@ function computeBuyLabels(issued) {
     let label = 'Corect';
     if (s.AskYTM >= q3) label = 'Oportunitate';
     else if (s.AskYTM < q1) label = 'Supraevaluat';
-    out[s.Symbol] = { label, illiquid: (s.BidYTM - s.AskYTM) > 1.0 };
+    out[s.Symbol] = { label, illiquid: !isLiquid(s) };
   }
   return out;
 }
@@ -328,7 +333,7 @@ function buildUpcoming(upcoming, issued) {
     const peers = issued.filter(i => {
       if (i.Currency !== ccy) return false;
       if (Math.abs(new Date(i.Maturity) - upcomingMat) > FOUR_MONTHS_MS) return false;
-      return (i.BidYTM - i.AskYTM) <= 1.0;
+      return isLiquid(i);
     });
 
     // Option 1: best AskYTM
@@ -548,6 +553,7 @@ function computeSellSignal(h, m, issued) {
   const alternatives = issued.filter(s =>
     s.Currency === m.Currency &&
     s.Symbol !== h.symbol &&
+    isLiquid(s) &&
     BANDS.indexOf(bandOf(s.Maturity)) >= myBandIdx
   );
   const bestAlt = alternatives.reduce((best, s) => s.AskYTM > (best?.AskYTM ?? 0) ? s : best, null);
