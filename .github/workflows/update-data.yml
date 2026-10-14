@@ -29,7 +29,10 @@ jobs:
       - name: Run scraper
         run: node scripts/scrape.js
 
+      # Runs even if one scraper failed so the other's data still lands;
+      # the job is still marked failed by the scraper step.
       - name: Commit & push if data changed
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

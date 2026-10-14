@@ -1,6 +1,7 @@
 /**
  * Scrapes fidelis.ro/emisiuni and fidelis.ro/tezaur for current bond rates
- * and appends any new entries to data/fidelis.json and data/tezaur.json.
+ * and appends any new entries to public/data/fidelis.json and public/data/tezaur.json.
+ * Exits non-zero if either scraper fails (after saving whatever succeeded).
  *
  * Run manually:  node scripts/scrape.js
  * Run via CI:    see .github/workflows/update-data.yml
@@ -30,6 +31,15 @@ function parseRate(str) {
   return parseFloat(str.replace('%', '').replace(',', '.').trim());
 }
 
+async function fetchHtml(url) {
+  const res = await fetch(url, {
+    headers: { 'User-Agent': UA },
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) throw new Error(`GET ${url} failed: ${res.status} ${res.statusText}`);
+  return res.text();
+}
+
 function isDuplicate(arr, entry) {
   return arr.some(e => e.d === entry.d && String(e.m) === String(entry.m));
 }
@@ -37,9 +47,7 @@ function isDuplicate(arr, entry) {
 // ── Fidelis scraper ───────────────────────────────────────────────────────────
 async function scrapeFidelis() {
   console.log('Fetching fidelis.ro/emisiuni …');
-  const html = await fetch('https://www.fidelis.ro/emisiuni', {
-    headers: { 'User-Agent': UA },
-  }).then(r => r.text());
+  const html = await fetchHtml('https://www.fidelis.ro/emisiuni');
 
   const $ = load(html);
 
@@ -91,9 +99,7 @@ async function scrapeFidelis() {
 // ── Tezaur scraper ────────────────────────────────────────────────────────────
 async function scrapeTezaur() {
   console.log('Fetching fidelis.ro/tezaur …');
-  const html = await fetch('https://www.fidelis.ro/tezaur', {
-    headers: { 'User-Agent': UA },
-  }).then(r => r.text());
+  const html = await fetchHtml('https://www.fidelis.ro/tezaur');
 
   const $ = load(html);
 
@@ -142,6 +148,7 @@ function writeJSON(file, data) {
 
 async function main() {
   let changed = false;
+  let failed = false;
 
   // --- Fidelis ---
   try {
@@ -182,6 +189,7 @@ async function main() {
     if (changed) writeJSON('fidelis.json', existing);
   } catch (err) {
     console.error('Fidelis scrape failed:', err.message);
+    failed = true;
   }
 
   // --- Tezaur ---
@@ -201,10 +209,11 @@ async function main() {
     changed = changed || tezaurChanged;
   } catch (err) {
     console.error('Tezaur scrape failed:', err.message);
+    failed = true;
   }
 
   console.log(changed ? '\nDone — data files updated.' : '\nDone — no new data.');
-  process.exit(0);
+  process.exit(failed ? 1 : 0);
 }
 
 main();
