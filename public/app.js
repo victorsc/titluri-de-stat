@@ -9,6 +9,15 @@ let _donData = { ron: [], eur: [] };
 let _eurBuilt = false;
 let _donBuilt = false;
 
+const yearsLabel = m => `${m} ${Number(m) === 1 ? 'an' : 'ani'}`;
+
+function fetchJSON(url) {
+  return fetch(url).then(r => {
+    if (!r.ok) throw new Error(`GET ${url} failed: ${r.status}`);
+    return r.json();
+  });
+}
+
 // ── Latest rates strip ────────────────────────────────────────────
 function buildRatesStrip(raw, stripId, colorMap) {
   const strip = document.getElementById(stripId);
@@ -18,7 +27,7 @@ function buildRatesStrip(raw, stripId, colorMap) {
   const latest = raw.filter(e => e.d === lastDate)
     .sort((a, b) => Number(a.m) - Number(b.m));
   const pills = latest.map(e => {
-    const label = `${e.m} ${e.m === 1 ? 'an' : 'ani'}`;
+    const label = yearsLabel(e.m);
     const color = colorMap[e.m] || '#fff';
     return `<span class="rate-pill">
       <span class="legend-swatch" aria-hidden="true" style="background:${color}"></span>
@@ -30,8 +39,8 @@ function buildRatesStrip(raw, stripId, colorMap) {
 }
 
 Promise.all([
-  fetch('data/tezaur.json').then(r => r.json()),
-  fetch('data/fidelis.json').then(r => r.json()),
+  fetchJSON('data/tezaur.json'),
+  fetchJSON('data/fidelis.json'),
 ]).then(([tezaur, fidelis]) => {
   _eurData = fidelis.eur;
   _donData = fidelis.donatori || { ron: [], eur: [] };
@@ -39,7 +48,11 @@ Promise.all([
   buildRatesStrip(fidelis.ron, 'fidelis-rates-ron', F_CLR);
   buildChart(tezaur,      'tezaurChart', T_CLR, 'Evoluție dobânzi Tezaur RON');
   buildChart(fidelis.ron, 'ronChart',    F_CLR, 'Evoluție dobânzi Fidelis RON');
-}).catch(err => console.error('Failed to load data:', err));
+}).catch(err => {
+  console.error('Failed to load data:', err);
+  document.querySelectorAll('.chart-skeleton').forEach(el => el.classList.add('hidden'));
+  document.getElementById('load-error').hidden = false;
+});
 
 // ── Chart builder ─────────────────────────────────────────────
 const PX_PER_LABEL = 26;
@@ -85,7 +98,7 @@ function buildChart(raw, canvasId, colorMap, ariaLabel) {
   if (chartW <= containerW) outer.classList.add('scrolled-end');
 
   const datasets = mats.map(m => ({
-    label: m + ' ani',
+    label: yearsLabel(m),
     data: labels.map(lbl => map[m]?.[lbl] ?? null),
     borderColor: colorMap[m] || '#fff',
     backgroundColor: colorMap[m] || '#fff',
@@ -181,7 +194,7 @@ function buildDonatoriRatesStrip(donData, stripId) {
     ...latestEur.map(e => ({ ...e, ccy: 'eur' })),
   ].map(e => {
     const key = `${e.m}${e.ccy}`;
-    const label = `${e.m} ${e.m === 1 ? 'an' : 'ani'} ${e.ccy.toUpperCase()}`;
+    const label = `${yearsLabel(e.m)} ${e.ccy.toUpperCase()}`;
     const color = D_CLR[key] || '#fff';
     return `<span class="rate-pill">
       <span class="legend-swatch" aria-hidden="true" style="background:${color}"></span>
@@ -255,7 +268,7 @@ function buildDonatoriChart(donData) {
   const datasets = seriesKeys.map(k => {
     const m = parseFloat(k);
     const isEur = k.endsWith('eur');
-    const label = `${m} ${m === 1 ? 'an' : 'ani'} ${isEur ? 'EUR' : 'RON'}`;
+    const label = `${yearsLabel(m)} ${isEur ? 'EUR' : 'RON'}`;
     return {
       label,
       data: labels.map(lbl => map[k]?.[lbl] ?? null),
@@ -342,7 +355,7 @@ function buildDonatoriChart(donData) {
     const src = pool.length >= 3 ? pool : facts;
     const picked = [];
     const indices = [];
-    while (picked.length < 3 && src.length > 0) {
+    while (picked.length < Math.min(3, src.length)) {
       const i = Math.floor(Math.random() * src.length);
       if (!indices.includes(i)) { picked.push(src[i]); indices.push(i); }
     }
@@ -361,8 +374,7 @@ function buildDonatoriChart(donData) {
       </div>`).join('');
   }
 
-  fetch('data/fun-facts.json')
-    .then(r => r.json())
+  fetchJSON('data/fun-facts.json')
     .then(data => {
       facts = data;
       render();
