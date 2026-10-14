@@ -155,24 +155,29 @@ function isLiquid(s) {
 }
 
 // ===== Buy Label Computation =====
+// Bands with fewer liquid peers than this are all labelled "Corect":
+// quartiles of 1–3 values would always flag the extremes.
+const MIN_BAND_PEERS = 4;
+
 function computeBuyLabels(issued) {
   const groups = {};
   for (const s of issued) {
+    if (!isLiquid(s)) continue; // stale quotes would skew the quartiles
     const key = s.Currency + '|' + bandOf(s.Maturity);
     (groups[key] = groups[key] || []).push(s.AskYTM);
   }
   const groupQ = {};
   for (const [key, vals] of Object.entries(groups)) {
+    if (vals.length < MIN_BAND_PEERS) continue;
     const sorted = vals.slice().sort((a, b) => a - b);
     groupQ[key] = { q1: quartile(sorted, 0.25), q3: quartile(sorted, 0.75) };
   }
   const out = {};
   for (const s of issued) {
-    const key = s.Currency + '|' + bandOf(s.Maturity);
-    const { q1, q3 } = groupQ[key] || { q1: 0, q3: 0 };
+    const q = groupQ[s.Currency + '|' + bandOf(s.Maturity)];
     let label = 'Corect';
-    if (s.AskYTM >= q3) label = 'Oportunitate';
-    else if (s.AskYTM < q1) label = 'Supraevaluat';
+    if (q && s.AskYTM >= q.q3) label = 'Oportunitate';
+    else if (q && s.AskYTM < q.q1) label = 'Supraevaluat';
     out[s.Symbol] = { label, illiquid: !isLiquid(s) };
   }
   return out;
