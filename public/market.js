@@ -431,12 +431,27 @@ function renderHoldingsTab(panelId, currency, issued) {
   });
 }
 
+// Fidelis coupons are paid yearly on the maturity date's anniversary.
+// The emission month only tells us the term (number of coupons).
+function couponSchedule(maturityStr, subDate, now = Date.now()) {
+  const mat = new Date(maturityStr);
+  const term = Math.max(0, Math.round((mat - subDate) / MS_PER_YEAR));
+  let received = 0;
+  let next = null;
+  for (let k = term - 1; k >= 0; k--) {
+    const d = new Date(mat);
+    d.setUTCFullYear(mat.getUTCFullYear() - k);
+    if (d <= now) received++;
+    else if (!next) next = d;
+  }
+  return { received, remaining: term - received, next };
+}
+
 function buildHoldingCard(h, m, issued) {
   const FACE = 10000;
   const ccy  = m.Currency;
   const emissionLabel = _emissionMap[h.symbol] || null;
   const subDate = parseEmissionDate(emissionLabel);
-  const matDate = new Date(m.Maturity);
   const annualCoupon = FACE * m.Coupon / 100;
 
   let couponsReceivedHtml = '';
@@ -444,14 +459,10 @@ function buildHoldingCard(h, m, issued) {
   let accruedHtml = '';
 
   if (subDate) {
-    const yearsHeld = (Date.now() - subDate) / MS_PER_YEAR;
-    const couponsReceived = Math.max(0, Math.floor(yearsHeld));
-    const totalTerm = Math.round((matDate - subDate) / MS_PER_YEAR);
-    const couponsRemaining = Math.max(0, totalTerm - couponsReceived);
+    const { received: couponsReceived, remaining: couponsRemaining, next: nextCoupon } =
+      couponSchedule(m.Maturity, subDate);
     const cashFromCoupons = couponsReceived * annualCoupon;
     const accrued = FACE * m.AccruedCoupon / 100;
-    const nextCoupon = new Date(subDate);
-    nextCoupon.setFullYear(subDate.getFullYear() + couponsReceived + 1);
 
     const sellDirty  = FACE * m.DirtyBid / 100;
     const grandSold  = cashFromCoupons + sellDirty;
@@ -463,7 +474,7 @@ function buildHoldingCard(h, m, issued) {
       <div class="hm"><span class="hm-label">Cupon acumulat (neincasat, inclus in pret murdar)</span>
         <span class="hm-value">${fmtNum(accrued)} ${ccy}</span></div>
       <div class="hm"><span class="hm-label">Urmatorul cupon estimat</span>
-        <span class="hm-value">${formatDate(nextCoupon)}</span></div>`;
+        <span class="hm-value">${nextCoupon ? formatDate(nextCoupon) : '—'}</span></div>`;
 
     accruedHtml = `
       <div class="sim-block sim-sell">
