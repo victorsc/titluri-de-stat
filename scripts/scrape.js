@@ -71,8 +71,8 @@ async function scrapeFidelis() {
 
       tds.each((_, td) => {
         const text = $(td).text().trim();
-        // "2 ani" / "10 ani"
-        const mMatch = text.match(/^(\d+)\s*ani?$/i);
+        // "2 ani" / "10 ani" / "3 ani (Donatori)"
+        const mMatch = text.match(/^(\d+)\s*ani?\b/i);
         if (mMatch) maturity = parseInt(mMatch[1]);
         // "6,60%"
         if (/^\d+,\d+%$/.test(text)) rate = parseRate(text);
