@@ -2,10 +2,11 @@
  * Sanity-checks the JSON files under public/data/ before they are committed
  * and deployed. Exits 1 and lists the problems if any check fails.
  *
- * Usage:  node scripts/validate-data.js [--base <git-ref>]
+ * Usage:  node scripts/validate-data.js [--base <git-ref>] [--allow-shrink]
  *
  * With a git ref (default: HEAD), the rate histories must not lose entries
- * compared to that ref: the scraper only ever appends.
+ * compared to that ref: the scraper only ever appends. --allow-shrink turns
+ * that into a warning, for reviewed PRs that correct the history by hand.
  */
 
 import { readFileSync } from 'fs';
@@ -28,6 +29,7 @@ const fail = msg => errors.push(msg);
 
 const baseIdx = process.argv.indexOf('--base');
 const baseRef = baseIdx !== -1 ? process.argv[baseIdx + 1] : 'HEAD';
+const allowShrink = process.argv.includes('--allow-shrink');
 
 function readCurrent(file) {
   try {
@@ -65,7 +67,9 @@ function checkRates(where, arr, baseArr) {
     seen.add(key);
   });
   if (Array.isArray(baseArr) && arr.length < baseArr.length) {
-    fail(`${where}: shrank from ${baseArr.length} to ${arr.length} entries vs ${baseRef}`);
+    const msg = `${where}: shrank from ${baseArr.length} to ${arr.length} entries vs ${baseRef}`;
+    if (allowShrink) console.warn(`warning: ${msg}`);
+    else fail(msg);
   }
 }
 
