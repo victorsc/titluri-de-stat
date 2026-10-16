@@ -104,15 +104,19 @@ async function scrapeTezaur() {
   const $ = load(html);
 
   // Date label from heading: "Emisiunea Tezaur aprilie 2026 - mai 2026"
+  // → "Apr–May 2026"; across a year boundary → "Dec 2026–Jan 2027"
   const bodyText = $('body').text();
   const hm = bodyText.match(
-    /Emisiunea\s+Tezaur\s+(\w+)\s+(\d{4})(?:\s*[-–]\s*(\w+)\s+\d{4})?/i
+    /Emisiunea\s+Tezaur\s+(\w+)\s+(\d{4})(?:\s*[-–]\s*(\w+)\s+(\d{4}))?/i
   );
   if (!hm) throw new Error('Tezaur: cannot find emission heading');
-  const m1   = roToEn(hm[1]);
-  const year = hm[2];
-  const m2   = hm[3] ? roToEn(hm[3]) : null;
-  const dateLabel = m2 ? `${m1}–${m2} ${year}` : `${m1} ${year}`;
+  const m1 = roToEn(hm[1]);
+  const y1 = hm[2];
+  const m2 = hm[3] ? roToEn(hm[3]) : null;
+  const y2 = hm[4] ?? y1;
+  const dateLabel = !m2        ? `${m1} ${y1}`
+                  : y1 === y2  ? `${m1}–${m2} ${y1}`
+                  :              `${m1} ${y1}–${m2} ${y2}`;
   console.log(`  Tezaur emission: ${dateLabel}`);
 
   // Rates from the 3-box grid: <h3>1 an</h3> … <p class="text-3xl …">6,50%</p>

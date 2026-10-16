@@ -33,6 +33,7 @@ public/               ← everything served by GitHub Pages
 scripts/              ← Node.js tooling (not served)
   scrape.js           ← scrapes fidelis.ro, appends to public/data/fidelis.json & tezaur.json
   fetch-market.js     ← fetches fidelis.pacalab.ro, writes public/data/fidelis_yields.json
+  validate-data.js    ← sanity-checks public/data/*.json; run before every data commit
 
 docs/                 ← developer documentation (not served)
   missing-emission-codes.md ← research on secondary-market bond emission dates
@@ -41,6 +42,7 @@ docs/                 ← developer documentation (not served)
   deploy.yml          ← deploys public/ to GitHub Pages on every push to main
   update-data.yml     ← runs scraper on 1st & 15th of each month
   update-market-data.yml ← fetches secondary-market data daily at 21:00 UTC
+  validate-data.yml   ← runs validate-data.js on PRs touching data or scripts
 ```
 
 ## Data format
@@ -75,6 +77,15 @@ cd scripts && npm install && node ../scripts/scrape.js
 ```bash
 node scripts/fetch-market.js
 ```
+
+## Validating data
+
+```bash
+node scripts/validate-data.js            # compares against HEAD
+node scripts/validate-data.js --base main
+```
+
+Checks labels, integer maturities, plausible rates, duplicate `(d, m)` pairs, and that no rate history shrinks vs the base ref. Both update workflows run it before committing.
 
 ## Scraper notes
 
