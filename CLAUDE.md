@@ -40,7 +40,7 @@ docs/                 ← developer documentation (not served)
 
 .github/workflows/
   deploy.yml          ← deploys public/ to GitHub Pages on every push to main
-  update-data.yml     ← runs scraper on 1st & 15th of each month
+  update-data.yml     ← runs scraper at 08:00 UTC on every odd day of the month
   update-market-data.yml ← fetches secondary-market data daily at 21:00 UTC
   validate-data.yml   ← runs validate-data.js on PRs touching data or scripts
 ```
@@ -49,11 +49,11 @@ docs/                 ← developer documentation (not served)
 
 Every entry in `fidelis.json` / `tezaur.json`: `{ "d": "May 2026", "m": 3, "r": 7.25 }`
 
-- `d` — emission label (`"Mon YYYY"` or `"Mon1–Mon2 YYYY"` for two-month Tezaur)
-- `m` — maturity in years (integer), or `"2d"` for the Fidelis blood-donor 2-year bond
+- `d` — emission label (`"Mon YYYY"`, or `"Mon1–Mon2 YYYY"` for two-month Tezaur)
+- `m` — maturity in years (integer)
 - `r` — annual rate as float (7.25 = 7.25%)
 
-`fidelis.json` has three top-level keys: `ron`, `eur`, and `donatori` (itself `{ ron: [], eur: [] }` for blood-donor bonds). `tezaur.json` is a flat array.
+`fidelis.json` has three top-level keys: `ron`, `eur`, and `donatori` (itself `{ ron: [], eur: [] }`). Blood-donor bonds live only in the `donatori` arrays, with ordinary numeric `m`. `tezaur.json` is a flat array.
 
 `fidelis_yields.json` is fetched from `fidelis.pacalab.ro` and contains secondary-market bid/ask prices, YTM values (broker commission already embedded), and accrued coupons for all listed Fidelis bonds.
 
@@ -61,7 +61,7 @@ Every entry in `fidelis.json` / `tezaur.json`: `{ "d": "May 2026", "m": 3, "r": 
 
 - Charts use **Chart.js 4** with `responsive: false` and explicit canvas sizing
 - Each chart is wrapped in `.chart-outer > .chart-wrap` — the wrap scrolls horizontally
-- Canvas width = `max(containerWidth, labels.length × 18px)` so every label gets space
+- Canvas width = `max(containerWidth, labels.length × PX_PER_LABEL)` (26px, in `app.js`) so every label gets space
 - Legend is a custom HTML element above the scroll container (stays fixed while scrolling)
 - Charts open scrolled to the right (most recent data visible) via `requestAnimationFrame`
 - EUR chart (Fidelis) is lazy-initialized on first tab click
