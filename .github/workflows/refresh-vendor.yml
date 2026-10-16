@@ -1,0 +1,41 @@
+name: Refresh vendored Chart.js
+
+# Renovate only bumps the version in the file's license banner;
+# this job replaces the file body with the matching release.
+on:
+  pull_request:
+    paths: ['public/vendor/chart.umd.min.js']
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: startsWith(github.head_ref, 'renovate/') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Download the Chart.js release named in the banner
+        run: |
+          FILE=public/vendor/chart.umd.min.js
+          VERSION=$(grep -oE '\* Chart\.js v[0-9]+\.[0-9]+\.[0-9]+' "$FILE" | head -1 | cut -dv -f2)
+          test -n "$VERSION"
+          curl -fsSL --max-time 60 "https://cdn.jsdelivr.net/npm/chart.js@${VERSION}/dist/chart.umd.min.js" -o "$FILE.new"
+          grep -q "Chart.js v${VERSION}" "$FILE.new"
+          mv "$FILE.new" "$FILE"
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/vendor/chart.umd.min.js
+          if git diff --cached --quiet; then
+            echo "Vendored file already matches."
+          else
+            git commit -m "chore: refresh vendored Chart.js"
+            git push
+          fi

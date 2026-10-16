@@ -21,7 +21,7 @@ public/               ← everything served by GitHub Pages
   robots.txt
   sitemap.xml
   vendor/
-    chart.umd.min.js  ← Chart.js 4, vendored (no CDN)
+    chart.umd.min.js  ← Chart.js 4, vendored (no CDN); Renovate bumps it, refresh-vendor.yml downloads the release
   data/
     fidelis.json      ← Fidelis RON + EUR + donor historical rates
     tezaur.json       ← Tezaur RON historical rates
@@ -93,4 +93,4 @@ GitHub Pages is configured to deploy from GitHub Actions (source: `deploy.yml`).
 
 ## Dependency management
 
-Renovate is configured (`renovate.json`) to auto-update GitHub Actions and npm dependencies via PRs, running Monday mornings (Europe/Bucharest). No manual `npm install` is needed for the static site itself — the only `package.json` is under `scripts/`.
+Renovate is configured (`renovate.json`) to auto-update GitHub Actions and npm dependencies via PRs, running Monday mornings (Europe/Bucharest). The vendored Chart.js is tracked by a regex manager reading its `Chart.js vX.Y.Z` banner; on `renovate/*` PRs, `.github/workflows/refresh-vendor.yml` downloads the matching `chart.umd.min.js` from jsDelivr and commits it. No manual `npm install` is needed for the static site itself — the only `package.json` is under `scripts/`.
