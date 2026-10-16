@@ -4,6 +4,7 @@
 let _mkt = null;
 let _holdings = [];
 let _emissionMap = {};
+let _donorMap = {};   // symbol → true/false, from the matched emission
 
 const BANDS = ['0-1', '1-2', '2-3', '3-5', '5+'];
 const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
@@ -15,7 +16,7 @@ Promise.all([
 ])
   .then(([mktData, fidData]) => {
     _mkt = mktData;
-    if (fidData) _emissionMap = buildEmissionMap(fidData);
+    if (fidData) ({ labels: _emissionMap, donor: _donorMap } = buildEmissionMap(fidData));
     _holdings = loadHoldings();
     init();
   })
@@ -42,7 +43,7 @@ const _MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 // 3y bond), so the coupon is the deciding key; maturity month alone is only a
 // fallback for emissions whose rate isn't in fidelis.json. The suffix letter
 // is a tranche sequence, not a donor flag (R2412BE was a regular EUR bond),
-// so it only breaks ties.
+// so it only breaks ties. Donor status comes from the array that matched.
 function buildEmissionMap(fid) {
   const entries = [
     ...(fid.ron || []).map(e => ({...e, src: 'ron'})),
@@ -51,7 +52,7 @@ function buildEmissionMap(fid) {
     ...((fid.donatori && fid.donatori.eur) || []).map(e => ({...e, src: 'don-eur'})),
   ].filter(e => typeof e.m === 'number');
 
-  const map = {};
+  const map = {}, donor = {};
   const issued = _mkt.symbols.filter(s => s._issued === 1);
 
   for (const s of issued) {
@@ -85,12 +86,15 @@ function buildEmissionMap(fid) {
       const score = (couponMatch ? 0 : 100) + deltaMo * 2 + (e.src === pref ? 0 : 1);
       if (score < bestScore) {
         bestScore = score;
-        best = e.d;
+        best = e;
       }
     }
-    if (best) map[sym] = best;
+    if (best) {
+      map[sym] = best.d;
+      donor[sym] = best.src.startsWith('don');
+    }
   }
-  return map;
+  return { labels: map, donor };
 }
 
 // ===== Freshness =====
@@ -147,8 +151,12 @@ function currencyOf(symbol, issued) {
   return m ? m.Currency : (symbol.endsWith('E') ? 'EUR' : 'RON');
 }
 
+// Prefer the matched emission; the suffix is only a guess for bonds with
+// no match (e.g. upcoming ones), since B/BE has also been used for regular
+// tranches (R2412BE, R2612BE).
 function isDonorBond(sym) {
   const s = sym.replace('*', '');
+  if (s in _donorMap) return _donorMap[s];
   return /B$/.test(s) || /D$/.test(s) || /BE$/.test(s);
 }
 
