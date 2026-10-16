@@ -37,6 +37,12 @@ function init() {
 // ===== Emission Date Lookup =====
 const _MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+// Matches each listed symbol to the emission it came from. Several tranches
+// can mature in the same month (e.g. R2802C, Feb 2026 2y, and the Feb 2025
+// 3y bond), so the coupon is the deciding key; maturity month alone is only a
+// fallback for emissions whose rate isn't in fidelis.json. The suffix letter
+// is a tranche sequence, not a donor flag (R2412BE was a regular EUR bond),
+// so it only breaks ties.
 function buildEmissionMap(fid) {
   const entries = [
     ...(fid.ron || []).map(e => ({...e, src: 'ron'})),
@@ -51,15 +57,16 @@ function buildEmissionMap(fid) {
   for (const s of issued) {
     const matDate = new Date(s.Maturity);
     const sym = s.Symbol;
+    const isEur = s.Currency === 'EUR';
     let pref;
-    if (/B$/.test(sym) || /D$/.test(sym)) pref = 'don-ron';
-    else if (/BE$/.test(sym)) pref = 'don-eur';
-    else if (/AE$/.test(sym) || /CE$/.test(sym)) pref = 'eur';
+    if (/BE$/.test(sym)) pref = 'don-eur';
+    else if (/E$/.test(sym)) pref = 'eur';
+    else if (/[BD]$/.test(sym)) pref = 'don-ron';
     else pref = 'ron';
 
-    let best = null, bestDelta = Infinity;
+    let best = null, bestScore = Infinity;
     for (const e of entries) {
-      if (e.src !== pref) continue;
+      if (e.src.endsWith('eur') !== isEur) continue;
       const parts = e.d.match(/^([A-Za-z]{3})[\s\S]*?(\d{4})$/);
       if (!parts) continue;
       const mi = _MONTH_ABBR.indexOf(parts[1]);
@@ -71,8 +78,13 @@ function buildEmissionMap(fid) {
         (matDate.getFullYear() - expMat.getFullYear()) * 12 +
         (matDate.getMonth() - expMat.getMonth())
       );
-      if (deltaMo <= 2 && deltaMo < bestDelta) {
-        bestDelta = deltaMo;
+      if (deltaMo > 2) continue;
+      const couponMatch = Math.abs(e.r - s.Coupon) < 0.001;
+      if (!couponMatch && e.src !== pref) continue;
+      // Coupon match dominates, then maturity distance, then preferred array.
+      const score = (couponMatch ? 0 : 100) + deltaMo * 2 + (e.src === pref ? 0 : 1);
+      if (score < bestScore) {
+        bestScore = score;
         best = e.d;
       }
     }

@@ -16,14 +16,16 @@ The screener matches secondary-market bond symbols from `fidelis_yields.json` to
 
 For each symbol in `fidelis_yields.json` (`_issued: 1`):
 
-1. Infer preferred source array from symbol suffix:
-   - `A` → `fidelis.json → ron`
-   - `AE`, `CE` → `fidelis.json → eur`
-   - `B`, `D` → `fidelis.json → donatori.ron`
-   - `BE` → `fidelis.json → donatori.eur`
-2. For each entry in the source array, compute `expected_maturity = issue_date + m years`.
-3. Find the entry with `|actual_maturity − expected_maturity| ≤ 2 months`.
-4. If found, display the emission label (e.g., "Aug 2024"); otherwise display "—".
+1. Consider only emissions in the bond's currency (`ron` + `donatori.ron`, or `eur` + `donatori.eur`)
+   whose `issue_date + m years` is within 2 months of the actual maturity.
+2. Prefer an entry whose rate `r` equals the bond's `Coupon`. Several tranches often mature in the
+   same month (e.g. `R2802C`: Feb 2026, 2y, 6.15% vs. the Feb 2025 3y bond), so the coupon is
+   what tells them apart.
+3. Otherwise fall back to the closest maturity in the array suggested by the suffix:
+   `A`/`C` → `ron`, `AE`/`CE` → `eur`, `B`/`D` → `donatori.ron`, `BE` → `donatori.eur`.
+   The suffix is only a tranche sequence letter, not a reliable donor flag: in Dec 2023,
+   `R2412B` was the donor bond but `R2412BE` was a regular EUR bond.
+4. Display the emission label (e.g. "Aug 2024"), or "—" if nothing matches.
 
 ---
 
