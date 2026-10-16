@@ -84,9 +84,9 @@ Each entry in the JSON files follows this shape:
 |-------|-------------|
 | `d` | Date label — emission month, e.g. `"May 2026"` or `"Apr–May 2026"` for two-month Tezaur periods |
 | `m` | Maturity in years (integer) |
+| `r` | Annual interest rate as a float, e.g. `7.25` for 7.25% |
 
 `fidelis.json` has `ron`, `eur` and `donatori: { ron, eur }` arrays; `tezaur.json` is a flat array.
-| `r` | Annual interest rate as a float, e.g. `7.25` for 7.25% |
 
 Append new entries at the end of the relevant array and push. Every push to `main` redeploys the site.
 
