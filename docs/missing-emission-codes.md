@@ -1,6 +1,6 @@
 # Missing / Unmatched Emission Codes — Fidelis Secondary Market
 
-Research conducted 2026-05-18. Updated when new bonds are added.
+Research conducted 2026-05-18; history audited against BVB press releases 2026-10-17.
 
 ---
 
@@ -8,7 +8,7 @@ Research conducted 2026-05-18. Updated when new bonds are added.
 
 The screener matches secondary-market bond symbols from `fidelis_yields.json` to emission records in
 `fidelis.json` to display an "Emisă" (issue month/year) column.  
-**118/119 issued symbols** resolve successfully. One remains unmatched.
+**158/158 issued symbols** (Oct 2026) resolve to an emission whose rate equals their coupon.
 
 ---
 
@@ -29,72 +29,40 @@ For each symbol in `fidelis_yields.json` (`_issued: 1`):
 
 ---
 
-## Donor bond series (B / BE / D suffix)
+## Donor bond series
 
-Blood-donor Fidelis bonds are a premium series issued monthly since **June 2025**,
-with ~1% higher coupon than standard bonds. They trade on BVB like regular Fidelis bonds.
+Blood-donor tranches carry ~1pp more than the matching standard tranche.
+- **RON:** every offer since **Mar–Apr 2023** (Fidelis XI) has had one; 1y until 2024, 2y since Jun 2025
+  (Dec 2024 also had a 3y donor tranche, R2712B).
+- **EUR:** only since **Jul 2025** (R2707BE). Earlier `BE` symbols (R2404BE, R2410BE, R2412BE,
+  R2508BE, R2612BE) are regular EUR bonds; `B` there is just the second tranche maturing that month.
+- `R2712D` is a one-off December 2025 donor RON bond.
 
-The scraper already captures them under `fidelis.json → donatori` (both `ron` and `eur`).
-Symbols follow the pattern `R{YYMM}B` (RON), `R{YYMM}BE` (EUR), `R2712D` (December 2025 RON).
-
-All donor bonds match successfully once the lookup restricts to the `donatori` arrays.
-
-**Donor bonds currently in the secondary market screener:**
-
-| Symbol   | Currency | Matures     | Coupon | Issue (approx.) |
-|----------|----------|-------------|--------|-----------------|
-| R2612BE  | EUR      | 2026-12-23  | 3.75%  | Dec 2024        |
-| R2706B   | RON      | 2027-06-19  | 8.35%  | Jun 2025        |
-| R2707B   | RON      | 2027-07-16  | 8.25%  | Jul 2025        |
-| R2707BE  | EUR      | 2027-07-16  | 4.40%  | Jul 2025        |
-| R2708B   | RON      | 2027-08-13  | 8.20%  | Aug 2025        |
-| R2708BE  | EUR      | 2027-08-13  | 4.10%  | Aug 2025        |
-| R2709B   | RON      | 2027-09-17  | 8.20%  | Sep 2025        |
-| R2709BE  | EUR      | 2027-09-17  | 4.10%  | Sep 2025        |
-| R2710B   | RON      | 2027-10-22  | 8.20%  | Oct 2025        |
-| R2711B   | RON      | 2027-11-19  | 7.95%  | Nov 2025        |
-| R2712B   | RON      | 2027-12-23  | 7.90%  | Dec 2025        |
-| R2712D   | RON      | 2027-12-17  | 7.55%  | Dec 2025        |
-| R2801B   | RON      | 2028-01-28  | 7.45%  | Jan 2026        |
-| R2802B   | RON      | 2028-02-18  | 7.15%  | Feb 2026        |
-| R2803B   | RON      | 2028-03-18  | 6.90%  | Mar 2026        |
-| R2804B   | RON      | 2028-04-24  | 7.60%  | Apr 2026        |
-
-`R2712D` is the standalone December 2025 donor bond (code "D" = one-off series).
+The market page takes the "Donatori" badge from the `donatori` array a bond matched in; the
+suffix is only a fallback for bonds with no match (e.g. upcoming ones).
 
 ---
 
 ## C / CE suffix bonds
 
-A third emission series (`C` = third tranche of a given maturity month).  
-Same risk/tax profile as `A`/`AE` bonds; coupon differs because they were issued in a
-different market environment. The lookup handles them identically to `A`/`AE` (matched
-against `ron` / `eur` arrays) and all resolve successfully.
+`C` is the third tranche maturing in a given month (e.g. R2802C, Feb 2026 2y, alongside R2802A,
+Feb 2025 3y, and R2802B). The coupon is what tells these apart.
 
 ---
 
-## Unresolved bond
+## History sources and known errors
 
-### R2804AE — EUR, matures 2028-04-13
+Entries before Jun 2026 were not scraped live. When correcting them:
+- **Use BVB press releases** ("Comunicat de presa … Fidelis …" / "Anunt Fidelis …" on bvb.ro):
+  each has a tranche table with symbol, maturity date and rate.
+- **fidelis.ro/istoric-complet-fidelis has wrong section headings**: its "Dec 2022" block is the
+  Apr 2023 offer, its "Dec 2023" block mixes in Mar 2024 bonds, and it lists some donor and
+  regular rates under swapped symbols. Trust the symbols, not the headings: `RYYMM` is the
+  maturity month, so issue month = maturity − term.
+- `fidelis_yields.json` coupons are authoritative for every bond still listed; the matcher
+  should find an exact-coupon emission for each one.
 
-This EUR bond does not match any entry in `fidelis.json → eur`:
-
-| Possible duration | Would imply issue date | In fidelis.json eur? |
-|-------------------|------------------------|----------------------|
-| 5Y                | Apr 2023               | **No** (no Apr 2023 EUR entry) |
-| 4Y                | Apr 2024               | **No** (Apr 2024 has m:1 and m:5 only, no m:4) |
-| 3Y                | Apr 2025               | **No** (Apr 2025 has m:2 and m:7 only) |
-
-**Most likely explanation:** a 4-year EUR tranche emitted in April 2024 that was not
-captured by the scraper because it was a supplementary auction or re-opening not listed
-in the main fidelis.ro/emisiuni table. 
-
-**Action needed:** manually check the Ministerul Finanțelor historical issuances for
-April 2023 and April 2024 EUR Fidelis series to confirm the issue date, then either:
-- Add a missing entry to `data/fidelis.json` if the scraper missed it, or
-- Add a hardcoded entry in the `buildEmissionMap()` function in `piata.js`.
-
-Until resolved, this symbol displays "—" in the Emisă column.
+The Mar–Apr 2023 offer (subscription 27 Mar–10 Apr, issued 13 Apr) is labelled `Apr 2023`.
 
 ---
 
