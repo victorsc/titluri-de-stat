@@ -82,7 +82,7 @@ node scripts/fetch-market.js
 
 ```bash
 node scripts/validate-data.js            # compares against HEAD
-node scripts/validate-data.js --base main
+node scripts/validate-data.js --base main --allow-shrink   # shrinkage → warning
 ```
 
 Checks labels, integer maturities, plausible rates, duplicate `(d, m)` pairs, and that no rate history shrinks vs the base ref. Both update workflows run it before committing.

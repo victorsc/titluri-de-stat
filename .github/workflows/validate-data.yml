@@ -21,5 +21,7 @@ jobs:
           node-version: '24'
 
       # HEAD is the PR merge commit; HEAD^1 is the base branch tip.
+      # Removals are allowed here (the PR is reviewed); the auto-update
+      # workflows keep the strict no-shrink check.
       - name: Validate data files
-        run: node scripts/validate-data.js --base HEAD^1
+        run: node scripts/validate-data.js --base HEAD^1 --allow-shrink
