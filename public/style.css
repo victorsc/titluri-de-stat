@@ -1276,7 +1276,14 @@ footer {
   cursor: pointer;
 }
 .check input { width: 1.125rem; height: 1.125rem; accent-color: var(--accent); cursor: pointer; }
-.table-count { margin-left: auto; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+/* Result count sits next to the filters so a filter's effect is visible
+   even when it only removes rows below the fold. */
+.filter-status { display: flex; align-items: center; gap: var(--space-2); }
+.table-count { font-size: var(--fs-sm); color: var(--text-muted); white-space: nowrap; }
+.table-count.is-filtered { color: var(--text); font-weight: 600; }
+.filter-reset { padding: 0 var(--space-3); }
+.filter-reset[hidden] { display: none; } /* .btn's display would override [hidden] */
+.filter-reset .icon { width: 1rem; height: 1rem; }
 .sort-mobile, .toolbar-help { display: none; }
 .toolbar-help { align-items: center; min-height: var(--target-min); font-size: var(--fs-sm); }
 .card-help { padding: 0 var(--space-5); border-bottom: 1px solid var(--border); }
