@@ -87,7 +87,9 @@ on `--surface-raised` sorted by value. The Chart.js Colors plugin is disabled.
 
 ## Language
 
-Every user-facing string is Romanian, with diacritics (ș ț ă â î). Emission
+Every user-facing string is Romanian, with diacritics (ș ț ă â î).
+Exception: broker terms users see on BVB and broker platforms (AskYTM,
+BidYTM, Spread, Ask, Bid) stay as-is and are explained in the glossary. Emission
 labels in the data keep English month abbreviations (`"May 2026"`) because
 the scraper and validator key on them; `roLabel()` in `app.js` / `market.js`
 renders them as `mai 2026`, `apr–mai 2026`. Full dates use
