@@ -3,12 +3,13 @@
 // point shape, so "3 ani" looks the same on every chart, legend and tile.
 // The shape is the second channel: no palette keeps every pair of 4+ series
 // apart for color-blind readers, so identity never rests on color alone.
+// No triangles: next to the rate deltas they read as up/down arrows.
 const MAT_SHAPE = {
   1:  'M1 6a5 5 0 1 0 10 0a5 5 0 1 0-10 0z',                                    // circle
   2:  'M1.5 1.5h9v9h-9z',                                                         // square
-  3:  'M6 .8 11.4 10.6H.6z',                                                      // triangle
+  3:  'M4.2 .6h3.6v3.6h3.6v3.6H7.8v3.6H4.2V7.8H.6V4.2h3.6z',                     // plus
   4:  'M6 .3 11.7 6 6 11.7 .3 6z',                                                // diamond
-  5:  'M6 11.2 .6 1.4h10.8z',                                                     // inverted triangle
+  5:  'M8.94 .5 11.5 3.06 8.56 6l2.94 2.94-2.56 2.56L6 8.56 3.06 11.5.5 8.94 3.44 6 .5 3.06 3.06.5 6 3.44z', // cross
   6:  'M6 .6 10.7 3.3v5.4L6 11.4 1.3 8.7V3.3z',                                   // hexagon
   7:  'M6 .6 11.5 4.6 9.4 11.1H2.6L.5 4.6z',                                      // pentagon
   10: 'M6 .3 7.7 4.2l4.1.4-3.1 2.8.9 4.1L6 9.4l-3.6 2.1.9-4.1L.2 4.6l4.1-.4z',   // star

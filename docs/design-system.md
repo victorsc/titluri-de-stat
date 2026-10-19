@@ -58,9 +58,9 @@ years: `--mat-1` … `--mat-10`; shapes live in `MAT_SHAPE` in `app.js`.
 |---|---|---|---|---|
 | 1 an | `--mat-1` | `#199e70` | `#13916a` | circle |
 | 2 ani | `--mat-2` | `#c98500` | `#b37a00` | square |
-| 3 ani | `--mat-3` | `#d55181` | `#d1508a` | triangle |
+| 3 ani | `--mat-3` | `#d55181` | `#d1508a` | plus |
 | 4 ani | `--mat-4` | `#008300` | `#008300` | diamond |
-| 5 ani | `--mat-5` | `#9085e9` | `#6250d6` | inverted triangle |
+| 5 ani | `--mat-5` | `#9085e9` | `#6250d6` | cross (×) |
 | 6 ani | `--mat-6` | `#e66767` | `#e34948` | hexagon |
 | 7 ani | `--mat-7` | `#d95926` | `#eb6834` | pentagon |
 | 10 ani | `--mat-10` | `#3987e5` | `#2a78d6` | star |
@@ -79,6 +79,9 @@ How it was validated (dataviz palette checker):
   every value as well.
 - 6 ani (red) and 7 ani (orange) are too close to sit next to each other. No
   chart has both today; if one ever does, re-run the search before shipping.
+
+Shapes are non-directional on purpose: triangles were dropped because, next
+to the rate deltas, ▲/▼ read as "went up / went down".
 
 Currency on the donor chart is a **dash** (EUR dashed), not a new color.
 Chart anatomy: 2px lines, 11px shape markers with a surface-colored ring, no
