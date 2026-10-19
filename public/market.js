@@ -158,8 +158,11 @@ function fmtNum(v) {
   return (+v).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// "15 dec 2026": same month abbreviations as the emission labels (roLabel),
+// rather than Intl's "dec." / "sept.".
 function formatDate(isoStr) {
-  return new Date(isoStr).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric' });
+  const d = new Date(isoStr);
+  return `${d.getDate()} ${_MONTH_RO[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function yrsLeftLabel(maturityStr) {
