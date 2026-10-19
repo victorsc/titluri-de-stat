@@ -41,6 +41,13 @@ const _charts = [];
 
 const yearsLabel = m => `${m} ${Number(m) === 1 ? 'an' : 'ani'}`;
 
+// Data labels use English month abbreviations ("May 2026", "Apr–May 2026");
+// they stay that way in the JSON (scraper + validator key on them) and are
+// translated only for display.
+const RO_MONTH = { Jan: 'ian', Feb: 'feb', Mar: 'mar', Apr: 'apr', May: 'mai', Jun: 'iun',
+                   Jul: 'iul', Aug: 'aug', Sep: 'sep', Oct: 'oct', Nov: 'nov', Dec: 'dec' };
+const roLabel = d => d && d.replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/g, m => RO_MONTH[m]);
+
 function fetchJSON(url) {
   return fetch(url).then(r => {
     if (!r.ok) throw new Error(`GET ${url} failed: ${r.status}`);
@@ -88,7 +95,7 @@ function latestRows(raw, tag = '') {
 function deltaHtml(row) {
   if (!row.prev) return '<span class="delta">nou</span>';
   const d = Math.round((row.r - row.prev.r) * 100) / 100;
-  const since = `față de ${row.prev.d} (${row.prev.r.toFixed(2)}%)`;
+  const since = `față de ${roLabel(row.prev.d)} (${row.prev.r.toFixed(2)}%)`;
   if (d === 0) return `<span class="delta" title="Neschimbat ${since}">neschimbat<span class="visually-hidden"> ${since}</span></span>`;
   const up = d > 0;
   const txt = `${up ? '+' : '−'}${Math.abs(d).toFixed(2)} pp`;
@@ -107,7 +114,7 @@ function nowGroupHtml({ title, dot, date, rows, href, tab }) {
     <div class="now-group-head">
       <span class="dot dot-${dot}" aria-hidden="true"></span>
       <h3>${title}</h3>
-      <span class="now-group-date">${date}</span>
+      <span class="now-group-date">${roLabel(date)}</span>
     </div>
     <ul class="now-list">${items}</ul>
     <a class="now-link" href="${href}"${tab ? ` data-tab="${tab}"` : ''}>Vezi istoricul ${ICON_ARROW}</a>
@@ -308,7 +315,7 @@ function buildChart(canvasId, labels, series, ariaLabel) {
   const outer  = canvas.closest('.chart-outer');
 
   canvas.setAttribute('role', 'img');
-  canvas.setAttribute('aria-label', `${ariaLabel}, ${labels[0]} până în ${labels[labels.length - 1]}`);
+  canvas.setAttribute('aria-label', `${ariaLabel}, ${roLabel(labels[0])} până în ${roLabel(labels[labels.length - 1])}`);
 
   wrap.setAttribute('tabindex', '0');
   wrap.setAttribute('role', 'region');
@@ -370,7 +377,7 @@ function buildChart(canvasId, labels, series, ariaLabel) {
 
   const chart = new Chart(canvas, {
     type: 'line',
-    data: { labels, datasets },
+    data: { labels: labels.map(roLabel), datasets },
     plugins: [stickyYAxis],
     options: {
       responsive: false,

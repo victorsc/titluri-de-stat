@@ -42,7 +42,7 @@ When adding a semantic token, define it in **three** places in `style.css`:
 | `--positive` | `#34d399` | `#047857` | Rate up, "Oportunitate", "Păstrează" |
 | `--warning` | `#fbbf24` | `#a14a06` | "Nelichid", sell signal |
 | `--negative` | `#f87171` | `#c0262d` | Rate down, "Supraevaluat", errors |
-| `--tezaur` / `--fidelis` | positive / accent | positive / accent | Product identity dot |
+| `--tezaur` / `--fidelis` | positive / accent | positive / accent | Product identity marker (`.dot`, a vertical bar, so it is never mistaken for a maturity shape) |
 
 Contrast ratios are against `--surface`. Each status color has a `-soft`
 variant for tinted backgrounds. Status is always paired with a text label
@@ -85,6 +85,14 @@ Chart anatomy: 2px lines, 11px shape markers with a surface-colored ring, no
 vertical grid, `--chart-grid` horizontal grid, `--chart-axis` ticks, tooltip
 on `--surface-raised` sorted by value. The Chart.js Colors plugin is disabled.
 
+## Language
+
+Every user-facing string is Romanian, with diacritics (ș ț ă â î). Emission
+labels in the data keep English month abbreviations (`"May 2026"`) because
+the scraper and validator key on them; `roLabel()` in `app.js` / `market.js`
+renders them as `mai 2026`, `apr–mai 2026`. Full dates use
+`toLocaleDateString('ro-RO')`.
+
 ## Typography
 
 Inter (already loaded), tabular numerals for all figures.
@@ -108,8 +116,9 @@ Bond symbols (`.sym`) use `--font-mono`.
 - Motion: one `--duration` (150ms) with `--ease`; reduced-motion disables
   transitions and chart animation.
 - Touch: `--target-min` is 36px for mouse, 44px under `pointer: coarse`.
-  Small icons (info `ⓘ`, 20px) extend their hit area to 44px with an inset
-  pseudo-element.
+  Small icons (info `ⓘ`, 20px) extend their hit area with an inset
+  pseudo-element: 28px for mice, 44px tall under `pointer: coarse`. The
+  extension stays 4px on the left so it never covers the header text.
 
 ## Components
 
@@ -145,7 +154,8 @@ Breakpoints: `1180px` (denser table), `1040px` (tables → cards; mirrored by
 - **Market tables:** below 1040px each row becomes a card (4 columns, 3 on
   phones, 2 under 340px) labelled from the cells' `data-label`. The header row
   is visually hidden and `inert`; a "Sortează după" select takes over sorting
-  and a "Ce înseamnă coloanele?" link opens the glossary.
+  (it follows header sorts too) and a "Ce înseamnă coloanele?" link opens the
+  glossary — on every market table, including upcoming emissions.
 - **Header:** sticky, except on short screens (`max-height: 520px`).
 - Text inside horizontally scrolling containers must not use absolutely
   positioned children without a positioned ancestor inside the scroller

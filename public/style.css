@@ -420,9 +420,10 @@ main {
   color: var(--text-muted);
 }
 
+/* Product marker: a vertical bar, so it never reads as a maturity shape. */
 .dot {
-  width: 0.625rem; height: 0.625rem;
-  border-radius: 3px;
+  width: 0.25rem; height: 0.875rem;
+  border-radius: 2px;
   flex-shrink: 0;
   background: var(--accent);
 }
@@ -974,9 +975,10 @@ footer {
 .market-table tbody tr:last-child td { border-bottom: none; }
 .market-table tbody tr:hover { background: var(--surface-raised); }
 .num-cell { text-align: right; }
-.num-good { color: var(--positive); }
-.num-warn { color: var(--warning); }
-.num-bad  { color: var(--negative); }
+/* .market-table td sets --text; these must outrank it. */
+.market-table td.num-good, .num-good { color: var(--positive); }
+.market-table td.num-warn, .num-warn { color: var(--warning); }
+.market-table td.num-bad,  .num-bad  { color: var(--negative); }
 
 .sym {
   font-family: var(--font-mono);
@@ -1021,7 +1023,12 @@ footer {
   cursor: pointer;
   transition: color var(--duration) var(--ease);
 }
-.tip-btn::before { content: ''; position: absolute; inset: -0.75rem; } /* 20px + 2×12px = 44px hit area */
+/* Hit area: 28px for mice; 44px tall on touch, extended right and only 4px
+   left so it doesn't swallow clicks on the header text (which sorts). */
+.tip-btn::before { content: ''; position: absolute; inset: -0.25rem; }
+@media (pointer: coarse) {
+  .tip-btn::before { inset: -0.75rem -0.75rem -0.75rem -0.25rem; }
+}
 .tip-btn .icon { width: 0.875rem; height: 0.875rem; }
 .tip-btn:hover, .tip-btn[aria-expanded="true"] { color: var(--accent); }
 .global-tip {
@@ -1208,7 +1215,7 @@ footer {
   .field-glossary dt { margin-top: var(--space-2); }
   .form-control-row input { max-width: none; }
   .form-control-row .btn { flex: 1; }
-  .card-header, .tab-bar, .chart-legend, .card-intro, .portfolio-intro,
+  .card-header, .tab-bar, .chart-legend, .card-intro, .card-help, .portfolio-intro,
   .add-holding-wrap, .holding-card { padding-left: var(--space-4); padding-right: var(--space-4); }
 }
 
@@ -1272,6 +1279,7 @@ footer {
 .table-count { margin-left: auto; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 .sort-mobile, .toolbar-help { display: none; }
 .toolbar-help { align-items: center; min-height: var(--target-min); font-size: var(--fs-sm); }
+.card-help { padding: 0 var(--space-5); border-bottom: 1px solid var(--border); }
 
 /* ============================================================
    RESPONSIVE: phones
@@ -1340,6 +1348,7 @@ footer {
    ~1040px as a table). */
 @media (max-width: 1040px) {
   .sort-mobile, .toolbar-help { display: flex; }
+  .card-intro:has(+ .card-help) { border-bottom: none; }
 
   /* Tables collapse into one card per bond, labelled from data-label.
      Keep in sync with CARD_LAYOUT in market.js (it makes the hidden thead inert). */

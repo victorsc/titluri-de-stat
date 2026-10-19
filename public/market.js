@@ -62,6 +62,9 @@ function setupCardLayout() {
 
 // ===== Emission Date Lookup =====
 const _MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// Display-only: emission labels keep English abbreviations in the data.
+const _MONTH_RO = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+const roLabel = d => d && d.replace(/\b[A-Z][a-z]{2}\b/g, m => _MONTH_RO[_MONTH_ABBR.indexOf(m)] ?? m);
 
 // Matches each listed symbol to the emission it came from. Several tranches
 // can mature in the same month (e.g. R2802C, Feb 2026 2y, and the Feb 2025
@@ -257,7 +260,7 @@ const BAND_LABELS = { '0-1': 'sub 1 an', '1-2': '1–2 ani', '2-3': '2–3 ani',
 // The sort <select> stands in for the column headers, which are hidden
 // when the table collapses into cards on narrow screens.
 const SORT_OPTIONS = [
-  ['Maturity:asc', 'Maturitate'],
+  ['Maturity:asc', 'Maturitate, crescător'],
   ['AskYTM:desc',  'AskYTM, descrescător'],
   ['Coupon:desc',  'Cupon, descrescător'],
   ['Spread:asc',   'Spread, crescător'],
@@ -297,7 +300,8 @@ function renderScreenerPanel(panelId, bonds, labels) {
   const table = buildScreenerTable(bonds, labels);
   wrap.appendChild(table);
   panel.append(toolbar, wrap);
-  const sortBy = attachSort(table, 'Maturity', true);
+  const sortSel = toolbar.querySelector('#sort-' + ccy);
+  const sortBy = attachSort(table, 'Maturity', true, (col, asc) => syncSortSelect(sortSel, table, col, asc));
 
   const bandSel = toolbar.querySelector('#band-' + ccy);
   const liquidChk = toolbar.querySelector('#liquid-' + ccy);
@@ -314,7 +318,7 @@ function renderScreenerPanel(panelId, bonds, labels) {
   };
   bandSel.addEventListener('change', applyFilter);
   liquidChk.addEventListener('change', applyFilter);
-  toolbar.querySelector('#sort-' + ccy).addEventListener('change', e => {
+  sortSel.addEventListener('change', e => {
     const [col, dir] = e.target.value.split(':');
     sortBy(col, dir === 'asc');
   });
@@ -367,7 +371,7 @@ function buildScreenerRow(s, lbl) {
   });
   tr.innerHTML = `
     <td data-label="Simbol"><code class="sym">${s.Symbol}</code></td>
-    <td data-label="Emisă">${emissionLabel}</td>
+    <td data-label="Emisă">${roLabel(emissionLabel)}</td>
     <td data-label="Maturitate">${formatDate(s.Maturity)}</td>
     <td data-label="Timp rămas">${yrsLeftLabel(s.Maturity)}</td>
     <td data-label="Cupon" class="num-cell">${fmtPct(s.Coupon)}</td>
@@ -387,7 +391,21 @@ function pillHtml(lbl) {
   return h;
 }
 
-function attachSort(table, defaultCol, defaultAsc) {
+// Keeps the card-layout "Sortează după" select in step with header sorting.
+// A header sort with no preset option gets one temporary option of its own.
+function syncSortSelect(sel, table, col, asc) {
+  const value = `${col}:${asc ? 'asc' : 'desc'}`;
+  sel.querySelector('option[data-custom]')?.remove();
+  if (![...sel.options].some(o => o.value === value)) {
+    const th = table.querySelector(`th[data-sort="${col}"]`);
+    const name = th ? th.firstChild.textContent.trim() : col;
+    sel.add(new Option(`${name}, ${asc ? 'crescător' : 'descrescător'}`, value));
+    sel.options[sel.options.length - 1].dataset.custom = '';
+  }
+  sel.value = value;
+}
+
+function attachSort(table, defaultCol, defaultAsc, onSort) {
   const setSorted = (th, asc) => {
     table.querySelectorAll('th[data-sort]').forEach(t => {
       t.classList.remove('sort-asc', 'sort-desc');
@@ -413,6 +431,7 @@ function attachSort(table, defaultCol, defaultAsc) {
   function sortBy(col, asc) {
     const th = table.querySelector(`th[data-sort="${col}"]`);
     if (th) setSorted(th, asc);
+    onSort?.(col, asc);
     const tbody = table.querySelector('tbody');
     Array.from(tbody.querySelectorAll('tr'))
       .sort((a, b) => {
@@ -653,7 +672,7 @@ function buildHoldingCard(h, m, issued) {
         <span class="currency-chip">${ccy}</span>
         ${donorTag}
         <span class="holding-meta">
-          ${emissionLabel ? 'emis ' + emissionLabel + ' ·' : ''} cupon ${fmtPct(m.Coupon)} · maturitate ${formatDate(m.Maturity)}
+          ${emissionLabel ? 'emis ' + roLabel(emissionLabel) + ' ·' : ''} cupon ${fmtPct(m.Coupon)} · maturitate ${formatDate(m.Maturity)}
         </span>
       </div>
       <button class="remove-btn" type="button" aria-label="Șterge ${h.symbol} din portofoliu">${ICON_X}</button>
