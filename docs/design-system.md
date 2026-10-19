@@ -8,8 +8,9 @@ tokens only; primitives exist so the two themes share one palette.
 
 - **Numbers first.** The rate is the content. Big tabular figures, quiet chrome.
 - **Swiss / minimal.** Flat surfaces, 1px borders, no glows or gradients.
-- **One meaning per color.** Product identity, maturity, and status each have
-  their own tokens and are never reused for one another.
+- **One meaning per token.** Product identity, maturity, and status each have
+  their own tokens. (`--tezaur` and `--fidelis` alias `--positive` and
+  `--accent` today, but components reference the identity token.)
 - **Accessible by default.** Text ≥ 4.5:1 in both themes, ≥ 12px, visible
   focus, 44px touch targets, `prefers-reduced-motion` honored.
 
@@ -33,7 +34,8 @@ When adding a semantic token, define it in **three** places in `style.css`:
 | `--surface` | `#131720` | `#ffffff` | Cards |
 | `--surface-raised` | `#1a1f2b` | `#f0f2f5` | Table header, hover, selected tab, tooltips |
 | `--surface-sunken` | `#0f1219` | `#f5f6f8` | Form wells, segmented-control track |
-| `--border` / `--border-strong` | `#262c3a` / `#343c4d` | `#e2e5eb` / `#cfd4dc` | Dividers / emphasized edges |
+| `--border` / `--border-strong` | `#262c3a` / `#343c4d` | `#e2e5eb` / `#cfd4dc` | Dividers / emphasized edges (decorative) |
+| `--border-input` | `#646e80` (3.5:1) | `#858e9e` (3.3:1) | Form-control edges (inputs, selects) — WCAG 1.4.11 |
 | `--text` | `#e6eaf0` (14.9:1) | `#0f172a` (17.9:1) | Primary text |
 | `--text-muted` | `#9aa4b5` (7.1:1) | `#556071` (6.4:1) | Secondary text, labels |
 | `--accent` | `#6ea3ff` (7.1:1) | `#1d5fd1` (5.8:1) | Links, primary button, focus ring |
@@ -48,29 +50,40 @@ variant for tinted backgrounds. Status is always paired with a text label
 
 ## Chart palette (maturities)
 
-Every maturity owns a fixed slot, so "3 ani" is aqua on every chart and tile.
-Slot order was validated for color-vision-deficiency separation (worst adjacent
-ΔE 8.4 dark / 9.1 light) with the dataviz palette checker.
+Every maturity owns a fixed color **and** a fixed point shape, so "3 ani" is
+the same on every chart, legend chip, tooltip and tile. Tokens are named by
+years: `--mat-1` … `--mat-10`; shapes live in `MAT_SHAPE` in `app.js`.
 
-| Maturity | Slot | Dark | Light |
-|---|---|---|---|
-| 1 an | `--mat-1` | `#3987e5` | `#2a78d6` |
-| 2 ani | `--mat-2` | `#d95926` | `#eb6834` |
-| 3 ani | `--mat-3` | `#199e70` | `#1baf7a` |
-| 4 ani | `--mat-4` | `#c98500` | `#eda100` |
-| 5 ani | `--mat-5` | `#d55181` | `#e87ba4` |
-| 6 ani | `--mat-6` | `#008300` | `#008300` |
-| 7 ani | `--mat-7` | `#9085e9` | `#6250d6` |
-| 10 ani | `--mat-8` | `#e66767` | `#e34948` |
+| Maturity | Token | Dark | Light | Shape |
+|---|---|---|---|---|
+| 1 an | `--mat-1` | `#199e70` | `#13916a` | circle |
+| 2 ani | `--mat-2` | `#c98500` | `#b37a00` | square |
+| 3 ani | `--mat-3` | `#d55181` | `#d1508a` | triangle |
+| 4 ani | `--mat-4` | `#008300` | `#008300` | diamond |
+| 5 ani | `--mat-5` | `#9085e9` | `#6250d6` | inverted triangle |
+| 6 ani | `--mat-6` | `#e66767` | `#e34948` | hexagon |
+| 7 ani | `--mat-7` | `#d95926` | `#eb6834` | pentagon |
+| 10 ani | `--mat-10` | `#3987e5` | `#2a78d6` | star |
 
-New maturity → add it to `MAT_SLOT` in `app.js`. Never generate a ninth hue.
+How it was validated (dataviz palette checker):
+
+- **Neighbouring series on every chart** (series are ordered by maturity, so
+  each chart's adjacent pairs are what the checker tests for line charts):
+  Tezaur, Fidelis RON, EUR and Donatori all pass CVD separation (worst ΔE 8.4,
+  target ≥ 8), normal-vision floor (worst 17.9, floor 15), lightness band,
+  chroma, and **≥ 3:1 contrast** against the surface in both themes. The
+  assignment was picked by searching all 8! maturity→color mappings.
+- **Every pair on a chart is not separable by color alone** — no palette can
+  do that past ~3 series. That's why each maturity also has a **shape**:
+  identity never rests on color. Text (legend labels, tooltips, tiles) carries
+  every value as well.
+- 6 ani (red) and 7 ani (orange) are too close to sit next to each other. No
+  chart has both today; if one ever does, re-run the search before shipping.
+
 Currency on the donor chart is a **dash** (EUR dashed), not a new color.
-In light mode slots 3–5 are below 3:1 against white, which is acceptable only
-because every value is also shown as text (tiles, tooltips, legend labels).
-
-Chart anatomy: 2px lines, 3px points with a surface-colored ring, no vertical
-grid, `--chart-grid` horizontal grid, `--chart-axis` ticks, tooltip on
-`--surface-raised` sorted by value.
+Chart anatomy: 2px lines, 11px shape markers with a surface-colored ring, no
+vertical grid, `--chart-grid` horizontal grid, `--chart-axis` ticks, tooltip
+on `--surface-raised` sorted by value. The Chart.js Colors plugin is disabled.
 
 ## Typography
 
@@ -95,7 +108,8 @@ Bond symbols (`.sym`) use `--font-mono`.
 - Motion: one `--duration` (150ms) with `--ease`; reduced-motion disables
   transitions and chart animation.
 - Touch: `--target-min` is 36px for mouse, 44px under `pointer: coarse`.
-  Small icons (info `ⓘ`) extend their hit area with an inset pseudo-element.
+  Small icons (info `ⓘ`, 20px) extend their hit area to 44px with an inset
+  pseudo-element.
 
 ## Components
 
@@ -117,17 +131,21 @@ Bond symbols (`.sym`) use `--font-mono`.
 
 ## Responsive behavior
 
-One breakpoint for layout (`max-width: 640px`), plus height-aware sizing:
+Breakpoints: `1180px` (denser table), `1040px` (tables → cards; mirrored by
+`CARD_LAYOUT` in `market.js`, which makes the hidden header row `inert`),
+`640px` (phone layout), plus height-aware sizing:
 
 - **Charts:** height = `clamp(260, 55% of viewport height, 420)` and at most
   80% of the width, recomputed on width changes (`sizeChart()` in `app.js`).
   The y-axis labels are redrawn on a pinned overlay canvas (`stickyYAxis`
   plugin) so the scale stays visible while the plot scrolls horizontally.
+  Charts use `maintainAspectRatio: false` so `resize()` honors both sizes.
 - **Rates-now tiles:** auto-fit grid on wide screens; on phones a swipeable
   scroll-snap row where the next tile peeks in.
-- **Market tables:** on phones each row becomes a card (3 columns, 2 under
-  340px) labelled from the cells' `data-label`. The column headers are hidden,
-  so a "Sortează după" select takes over sorting.
+- **Market tables:** below 1040px each row becomes a card (4 columns, 3 on
+  phones, 2 under 340px) labelled from the cells' `data-label`. The header row
+  is visually hidden and `inert`; a "Sortează după" select takes over sorting
+  and a "Ce înseamnă coloanele?" link opens the glossary.
 - **Header:** sticky, except on short screens (`max-height: 520px`).
 - Text inside horizontally scrolling containers must not use absolutely
   positioned children without a positioned ancestor inside the scroller

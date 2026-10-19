@@ -67,7 +67,7 @@ Every entry in `fidelis.json` / `tezaur.json`: `{ "d": "May 2026", "m": 3, "r": 
 - Legend is a custom HTML element above the scroll container (stays fixed while scrolling)
 - Charts open scrolled to the right (most recent data visible) via `requestAnimationFrame`
 - EUR and Donatori charts (Fidelis) are lazy-initialized on first tab click
-- Series colors come from fixed per-maturity CSS tokens (`--mat-N`, mapped by `MAT_SLOT` in `app.js`); charts repaint on `themechange`
+- Each maturity has a fixed color token (`--mat-<years>`) and point shape (`MAT_SHAPE` in `app.js`); charts repaint on `themechange`
 
 ## Design system
 

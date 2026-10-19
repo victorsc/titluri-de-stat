@@ -33,17 +33,31 @@ function init() {
   setupTabs();
   setupTooltips();
   setupHoldingForm(issued);
-  setupDespreLink();
+  setupDespreLinks();
+  setupCardLayout();
 }
 
-// The intro's "Cum funcționează" link opens the first explainer.
-function setupDespreLink() {
-  document.querySelectorAll('a[href="#despre"]').forEach(a => {
-    a.addEventListener('click', () => {
-      const first = document.querySelector('#despre details');
-      if (first) first.open = true;
-    });
+// Links into the explainers open the matching accordion: "Cum funcționează"
+// the first one, "Ce înseamnă coloanele?" the glossary.
+function setupDespreLinks() {
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href="#despre"], a[href="#glosar"]');
+    if (!a) return;
+    const target = a.getAttribute('href') === '#glosar'
+      ? document.getElementById('glosar')
+      : document.querySelector('#despre details');
+    if (target) target.open = true;
   });
+}
+
+// Below 1040px the tables render as cards and the header row is only
+// visually hidden; make it inert so its sort and tooltip controls leave the
+// tab order (the toolbar's sort select and glossary link replace them).
+const CARD_LAYOUT = window.matchMedia('(max-width: 1040px)');
+function setupCardLayout() {
+  const apply = () => document.querySelectorAll('.market-table thead').forEach(t => { t.inert = CARD_LAYOUT.matches; });
+  CARD_LAYOUT.addEventListener('change', apply);
+  apply();
 }
 
 // ===== Emission Date Lookup =====
@@ -222,7 +236,7 @@ const ICON_CHECK = svgIcon('<path d="M20 6 9 17l-5-5"/>', 2.5);
 const ICON_SWAP  = svgIcon('<path d="M7 16V4M3 8l4-4 4 4M17 8v12M21 16l-4 4-4-4"/>');
 
 const tipBtn = (name, text) =>
-  `<button class="tip-btn" type="button" aria-label="Ce înseamnă ${name}?" data-tip="${text}">${ICON_INFO}</button>`;
+  `<button class="tip-btn" type="button" aria-label="Ce înseamnă ${name}?" aria-expanded="false" data-tip="${text}">${ICON_INFO}</button>`;
 
 // ===== Screener =====
 const TH_TIPS = {
@@ -275,6 +289,7 @@ function renderScreenerPanel(panelId, bonds, labels) {
       <input type="checkbox" id="liquid-${ccy}" />
       Doar lichide
     </label>
+    <a class="toolbar-help" href="#glosar">Ce înseamnă coloanele?</a>
     <span class="table-count" aria-live="polite"></span>`;
 
   const wrap = document.createElement('div');
@@ -546,10 +561,12 @@ function renderHoldingsTab(panelId, currency, issued) {
       errDiv.className = 'holding-card holding-error';
       errDiv.innerHTML = `<code class="sym">${h.symbol}</code> — date de piață indisponibile.
         <button class="remove-btn" type="button" aria-label="Șterge ${h.symbol} din portofoliu">${ICON_X}</button>`;
-      errDiv.querySelector('.remove-btn').addEventListener('click', () => {
+      errDiv.querySelector('.remove-btn').addEventListener('click', e => {
+        const idx = removeIndex(e.currentTarget);
         _holdings = _holdings.filter(x => x.symbol !== h.symbol);
         saveHoldings();
         renderHoldingsTab(panelId, currency, issued);
+        refocusHoldings(panelId, idx);
       });
       container.appendChild(errDiv);
       return;
@@ -654,13 +671,26 @@ function buildHoldingCard(h, m, issued) {
     </div>
   `;
 
-  div.querySelector('.remove-btn').addEventListener('click', () => {
+  div.querySelector('.remove-btn').addEventListener('click', e => {
+    const idx = removeIndex(e.currentTarget);
     _holdings = _holdings.filter(x => x.symbol !== h.symbol);
     saveHoldings();
     renderHoldingsTab('p-ron-panel', 'RON', issued);
     renderHoldingsTab('p-eur-panel', 'EUR', issued);
+    refocusHoldings(ccy === 'EUR' ? 'p-eur-panel' : 'p-ron-panel', idx);
   });
   return div;
+}
+
+// The clicked button disappears on re-render; move focus to the holding
+// that took its place (or the previous one, or the add field) so keyboard
+// users aren't dropped back at the top of the page.
+function removeIndex(btn) {
+  return [...btn.closest('.holdings-list').querySelectorAll('.remove-btn')].indexOf(btn);
+}
+function refocusHoldings(panelId, idx) {
+  const btns = document.querySelectorAll(`#${panelId} .remove-btn`);
+  (btns[Math.min(idx, btns.length - 1)] || document.getElementById('h-symbol'))?.focus();
 }
 
 function renderSignalHtml(signal, m) {

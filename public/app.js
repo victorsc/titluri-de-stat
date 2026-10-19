@@ -1,8 +1,32 @@
-// ── Colors ───────────────────────────────────────────────────────
-// Each maturity owns a fixed palette slot (--mat-1…--mat-8 in style.css) so
-// "3 ani" is the same color on every chart and in both themes.
-const MAT_SLOT = {1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 10:8};
-const matVar = m => `var(--mat-${MAT_SLOT[m] || 8})`;
+// ── Colors & shapes ──────────────────────────────────────────────
+// Each maturity owns a fixed color (--mat-<years> in style.css) and a fixed
+// point shape, so "3 ani" looks the same on every chart, legend and tile.
+// The shape is the second channel: no palette keeps every pair of 4+ series
+// apart for color-blind readers, so identity never rests on color alone.
+const MAT_SHAPE = {
+  1:  'M1 6a5 5 0 1 0 10 0a5 5 0 1 0-10 0z',                                    // circle
+  2:  'M1.5 1.5h9v9h-9z',                                                         // square
+  3:  'M6 .8 11.4 10.6H.6z',                                                      // triangle
+  4:  'M6 .3 11.7 6 6 11.7 .3 6z',                                                // diamond
+  5:  'M6 11.2 .6 1.4h10.8z',                                                     // inverted triangle
+  6:  'M6 .6 10.7 3.3v5.4L6 11.4 1.3 8.7V3.3z',                                   // hexagon
+  7:  'M6 .6 11.5 4.6 9.4 11.1H2.6L.5 4.6z',                                      // pentagon
+  10: 'M6 .3 7.7 4.2l4.1.4-3.1 2.8.9 4.1L6 9.4l-3.6 2.1.9-4.1L.2 4.6l4.1-.4z',   // star
+};
+const matVar = m => MAT_SHAPE[m] ? `var(--mat-${m})` : 'var(--text-muted)';
+const shapeOf = m => MAT_SHAPE[m] || MAT_SHAPE[1];
+const shapeSvg = m =>
+  `<svg class="swatch-shape" viewBox="0 0 12 12" aria-hidden="true"><path d="${shapeOf(m)}" style="fill:${matVar(m)}"/></svg>`;
+
+// Chart.js draws image point styles at their CSS size in the device-scaled
+// context, so an SVG image stays crisp on high-DPI screens.
+function pointImage(m, color, ring) {
+  const img = new Image(11, 11);
+  img.src = 'data:image/svg+xml,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="-1.5 -1.5 15 15">` +
+    `<path d="${shapeOf(m)}" fill="${color}" stroke="${ring}" stroke-width="1.6" paint-order="stroke"/></svg>`);
+  return img;
+}
 
 const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const resolve = v => v.startsWith('var(') ? cssVar(v.slice(4, -1)) : v;
@@ -64,7 +88,7 @@ function latestRows(raw, tag = '') {
 function deltaHtml(row) {
   if (!row.prev) return '<span class="delta">nou</span>';
   const d = Math.round((row.r - row.prev.r) * 100) / 100;
-  const since = `față de ${row.prev.d} (${row.prev.r}%)`;
+  const since = `față de ${row.prev.d} (${row.prev.r.toFixed(2)}%)`;
   if (d === 0) return `<span class="delta" title="Neschimbat ${since}">neschimbat<span class="visually-hidden"> ${since}</span></span>`;
   const up = d > 0;
   const txt = `${up ? '+' : '−'}${Math.abs(d).toFixed(2)} pp`;
@@ -75,7 +99,7 @@ function nowGroupHtml({ title, dot, date, rows, href, tab }) {
   const items = rows
     .sort((a, b) => a.m - b.m || a.tag.localeCompare(b.tag))
     .map(r => `<li class="now-row">
-      <span class="now-mat"><span class="swatch" style="background:${matVar(r.m)}" aria-hidden="true"></span>${yearsLabel(r.m)}${r.tag ? ' ' + r.tag : ''}</span>
+      <span class="now-mat">${shapeSvg(r.m)}${yearsLabel(r.m)}${r.tag ? ' ' + r.tag : ''}</span>
       <span class="now-rate">${r.r.toFixed(2)}<small>%</small></span>
       ${deltaHtml(r)}
     </li>`).join('');
@@ -119,7 +143,7 @@ function seriesByMaturity(raw) {
   const series = mats.map(m => {
     const values = {};
     raw.filter(e => e.m === m).forEach(e => { values[e.d] = e.r; });
-    return { label: yearsLabel(m), color: matVar(m), dashed: false, values };
+    return { label: yearsLabel(m), mat: m, color: matVar(m), dashed: false, values };
   });
   return [labels, series];
 }
@@ -145,7 +169,7 @@ function seriesDonatori(don) {
     const [m, ccy] = k.split('|');
     const values = {};
     tagged.filter(e => e.m === Number(m) && e.ccy === ccy).forEach(e => { values[e.d] = e.r; });
-    return { label: `${yearsLabel(m)} ${ccy}`, color: matVar(Number(m)), dashed: ccy === 'EUR', values };
+    return { label: `${yearsLabel(m)} ${ccy}`, mat: Number(m), color: matVar(Number(m)), dashed: ccy === 'EUR', values };
   });
   return [labels, series];
 }
@@ -168,7 +192,7 @@ const stickyYAxis = {
     const y = chart.scales.y;
     const dpr = chart.currentDevicePixelRatio;
     const w = Math.ceil(chart.chartArea.left);
-    const h = Math.ceil(chart.chartArea.bottom) + 8;
+    const h = chart.height; // full height, so rotated x labels never show through
     if (ov.width !== w * dpr || ov.height !== h * dpr) {
       ov.width = w * dpr;
       ov.height = h * dpr;
@@ -211,14 +235,17 @@ function sizeChart(meta) {
 
 const _chartMeta = [];
 let _lastW = window.innerWidth;
+let _lastH = chartHeight();
 let _resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
   _resizeTimer = setTimeout(() => {
-    // Mobile browsers fire resize when the URL bar hides; only react to
-    // width changes so the chart doesn't jump while scrolling.
-    if (window.innerWidth === _lastW) return;
+    // Mobile browsers fire resize when the URL bar hides; ignore small
+    // height-only changes so the chart doesn't jump while scrolling.
+    const h = chartHeight();
+    if (window.innerWidth === _lastW && Math.abs(h - _lastH) < 60) return;
     _lastW = window.innerWidth;
+    _lastH = h;
     _chartMeta.forEach(m => {
       if (!m.outer.offsetParent) return; // hidden tab; sized when shown
       const wasAtEnd = m.outer.classList.contains('scrolled-end');
@@ -240,15 +267,20 @@ function themeOptions() {
   };
 }
 
+// Sets a dataset's theme-dependent colors and point image; returns a
+// promise that settles once the image is decoded.
+function styleDataset(ds, t) {
+  const c = resolve(ds._color);
+  ds.borderColor = c;
+  ds.backgroundColor = c;
+  ds.pointBackgroundColor = c;
+  ds.pointStyle = pointImage(ds._mat, c, t.surface);
+  return ds.pointStyle.decode().catch(() => {});
+}
+
 function applyTheme(chart) {
   const t = themeOptions();
-  chart.data.datasets.forEach(ds => {
-    const c = resolve(ds._color);
-    ds.borderColor = c;
-    ds.backgroundColor = c;
-    ds.pointBackgroundColor = c;
-    ds.pointBorderColor = t.surface;
-  });
+  const decoding = chart.data.datasets.map(ds => styleDataset(ds, t));
   const tip = chart.options.plugins.tooltip;
   Object.assign(tip, { backgroundColor: t.raised, borderColor: t.border, titleColor: t.text, bodyColor: t.text });
   ['x', 'y'].forEach(ax => {
@@ -256,11 +288,19 @@ function applyTheme(chart) {
     chart.options.scales[ax].grid.color = t.grid;
     chart.options.scales[ax].border = { color: t.grid };
   });
+  return Promise.all(decoding);
 }
 
-document.addEventListener('themechange', () => {
-  _charts.forEach(c => { applyTheme(c); c.update('none'); });
-});
+// Point images decode asynchronously; draw once now and again when ready.
+// A full update(): update('none') reuses cached point options and would
+// keep the previous theme's images.
+function repaint(chart) {
+  const ready = applyTheme(chart);
+  chart.update();
+  ready.then(() => chart.update());
+}
+
+document.addEventListener('themechange', () => _charts.forEach(repaint));
 
 function buildChart(canvasId, labels, series, ariaLabel) {
   const canvas = document.getElementById(canvasId);
@@ -271,6 +311,7 @@ function buildChart(canvasId, labels, series, ariaLabel) {
   canvas.setAttribute('aria-label', `${ariaLabel}, ${labels[0]} până în ${labels[labels.length - 1]}`);
 
   wrap.setAttribute('tabindex', '0');
+  wrap.setAttribute('role', 'region');
   wrap.setAttribute('aria-label', `${ariaLabel} — derulați orizontal cu săgețile`);
   wrap.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight') { wrap.scrollLeft += 60; e.preventDefault(); }
@@ -293,12 +334,11 @@ function buildChart(canvasId, labels, series, ariaLabel) {
   const datasets = series.map(s => ({
     label: s.label,
     _color: s.color,
+    _mat: s.mat,
     data: labels.map(lbl => s.values[lbl] ?? null),
     fill: false,
     tension: 0.3,
-    pointRadius: labels.map(lbl => s.values[lbl] != null ? 3 : 0),
-    pointHoverRadius: 6,
-    pointBorderWidth: 1.5,
+    pointHitRadius: 8,
     spanGaps: false,
     borderWidth: 2,
     borderDash: s.dashed ? [6, 4] : [],
@@ -314,9 +354,9 @@ function buildChart(canvasId, labels, series, ariaLabel) {
     btn.type = 'button';
     btn.className = 'legend-item';
     btn.setAttribute('aria-pressed', 'true');
-    btn.innerHTML = s.dashed
-      ? `<span class="swatch swatch-dashed" aria-hidden="true" style="border-color:${s.color}"></span>${s.label}`
-      : `<span class="swatch" aria-hidden="true" style="background:${s.color}"></span>${s.label}`;
+    btn.innerHTML = (s.dashed
+      ? `<span class="swatch swatch-dashed" aria-hidden="true" style="border-color:${s.color}"></span>`
+      : '') + shapeSvg(s.mat) + s.label;
     btn.dataset.idx = i;
     legendEl.appendChild(btn);
   });
@@ -325,6 +365,8 @@ function buildChart(canvasId, labels, series, ariaLabel) {
   wrap.insertAdjacentElement('afterend', yAxis);
 
   Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  const theme = themeOptions();
+  datasets.forEach(ds => styleDataset(ds, theme));
 
   const chart = new Chart(canvas, {
     type: 'line',
@@ -332,10 +374,12 @@ function buildChart(canvasId, labels, series, ariaLabel) {
     plugins: [stickyYAxis],
     options: {
       responsive: false,
+      maintainAspectRatio: false, // resize() must honor the width sizeChart() computes
       animation: REDUCED_MOTION ? false : { duration: 400 },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
+        colors: { enabled: false }, // colors come from the --mat-* tokens
         tooltip: {
           borderWidth: 1,
           padding: 12,
@@ -366,8 +410,7 @@ function buildChart(canvasId, labels, series, ariaLabel) {
   chart.$yAxis = yAxis;
   meta.chart = chart;
   _chartMeta.push(meta);
-  applyTheme(chart);
-  chart.update('none');
+  repaint(chart);
   _charts.push(chart);
 
   requestAnimationFrame(() => {

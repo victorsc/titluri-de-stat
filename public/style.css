@@ -62,6 +62,7 @@
   --surface-sunken: #0f1219;
   --border:         var(--slate-800);
   --border-strong:  var(--slate-700);
+  --border-input:   #646e80;  /* 3.5:1 on surface: form-control edges (WCAG 1.4.11) */
   --text:           var(--slate-100);
   --text-muted:     var(--slate-400);
   --accent:         #6ea3ff;
@@ -81,18 +82,20 @@
   --fidelis: var(--accent);
 
   /* ---- Component: charts ----
-     One fixed slot per maturity so "3 ani" is the same color on every chart.
-     Validated for CVD separation with the dataviz palette checker. */
+     One fixed color per maturity (token = years) so "3 ani" is the same color
+     on every chart and tile. Assignment chosen so neighbouring series on every
+     chart clear the CVD and normal-vision gates in both themes (dataviz
+     validator); each maturity also has its own point shape (MAT_SHAPE in app.js). */
   --chart-grid: rgba(255, 255, 255, 0.07);
   --chart-axis: var(--slate-400);
-  --mat-1: #3987e5;  /* 1 an    blue    */
-  --mat-2: #d95926;  /* 2 ani   orange  */
-  --mat-3: #199e70;  /* 3 ani   aqua    */
-  --mat-4: #c98500;  /* 4 ani   yellow  */
-  --mat-5: #d55181;  /* 5 ani   magenta */
-  --mat-6: #008300;  /* 6 ani   green   */
-  --mat-7: #9085e9;  /* 7 ani   violet  */
-  --mat-8: #e66767;  /* 10 ani  red     */
+  --mat-1:  #199e70;  /* aqua    */
+  --mat-2:  #c98500;  /* yellow  */
+  --mat-3:  #d55181;  /* magenta */
+  --mat-4:  #008300;  /* green   */
+  --mat-5:  #9085e9;  /* violet  */
+  --mat-6:  #e66767;  /* red     */
+  --mat-7:  #d95926;  /* orange  */
+  --mat-10: #3987e5;  /* blue    */
 }
 
 /* ---- Semantic: light ---- */
@@ -105,6 +108,7 @@
     --surface-sunken: var(--gray-25);
     --border:         var(--gray-150);
     --border-strong:  var(--gray-250);
+    --border-input:   #858e9e;
     --text:           var(--gray-950);
     --text-muted:     var(--gray-600);
     --accent:         #1d5fd1;
@@ -120,14 +124,14 @@
     --shadow-pop:     0 8px 24px rgba(15, 23, 42, 0.12);
     --chart-grid: rgba(15, 23, 42, 0.07);
     --chart-axis: var(--gray-600);
-    --mat-1: #2a78d6;
-    --mat-2: #eb6834;
-    --mat-3: #1baf7a;
-    --mat-4: #eda100;
-    --mat-5: #e87ba4;
-    --mat-6: #008300;
-    --mat-7: #6250d6;
-    --mat-8: #e34948;
+    --mat-1:  #13916a;
+    --mat-2:  #b37a00;
+    --mat-3:  #d1508a;
+    --mat-4:  #008300;
+    --mat-5:  #6250d6;
+    --mat-6:  #e34948;
+    --mat-7:  #eb6834;
+    --mat-10: #2a78d6;
   }
 }
 :root[data-theme="light"] {
@@ -138,6 +142,7 @@
   --surface-sunken: var(--gray-25);
   --border:         var(--gray-150);
   --border-strong:  var(--gray-250);
+  --border-input:   #858e9e;
   --text:           var(--gray-950);
   --text-muted:     var(--gray-600);
   --accent:         #1d5fd1;
@@ -153,14 +158,14 @@
   --shadow-pop:     0 8px 24px rgba(15, 23, 42, 0.12);
   --chart-grid: rgba(15, 23, 42, 0.07);
   --chart-axis: var(--gray-600);
-  --mat-1: #2a78d6;
-  --mat-2: #eb6834;
-  --mat-3: #1baf7a;
-  --mat-4: #eda100;
-  --mat-5: #e87ba4;
-  --mat-6: #008300;
-  --mat-7: #6250d6;
-  --mat-8: #e34948;
+  --mat-1:  #13916a;
+  --mat-2:  #b37a00;
+  --mat-3:  #d1508a;
+  --mat-4:  #008300;
+  --mat-5:  #6250d6;
+  --mat-6:  #e34948;
+  --mat-7:  #eb6834;
+  --mat-10: #2a78d6;
 }
 
 @media (pointer: coarse) {
@@ -610,7 +615,7 @@ main {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: calc(var(--target-min) - 0.25rem);
+  min-height: var(--target-min);
   padding: 0 var(--space-3);
   font-size: var(--fs-sm);
   font-weight: 500;
@@ -624,6 +629,12 @@ main {
 .legend-item:hover { border-color: var(--border-strong); }
 .legend-item[aria-pressed="false"] { opacity: 0.45; }
 .legend-item[aria-pressed="false"] .swatch { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--text-muted); }
+.swatch-shape { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+.legend-item[aria-pressed="false"] .swatch-shape path {
+  fill: none !important;
+  stroke: var(--text-muted);
+  stroke-width: 1.2;
+}
 .swatch-dashed {
   width: 1rem; height: 0;
   border-radius: 0;
@@ -826,6 +837,7 @@ footer {
 .despre-section { display: flex; flex-direction: column; gap: var(--space-2); scroll-margin-top: 5rem; }
 .despre-section .section-label { margin-bottom: var(--space-1); }
 .accordion {
+  scroll-margin-top: 5rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -909,9 +921,13 @@ footer {
   font-variant-numeric: tabular-nums;
   min-width: 760px;
 }
+.market-table th:first-child, .market-table td:first-child { padding-left: var(--space-5); }
+.market-table th:last-child,  .market-table td:last-child  { padding-right: var(--space-5); }
+.market-table td[data-label="Etichetă"] { white-space: normal; min-width: 7.5rem; }
+.market-table td[data-label="Etichetă"] .status-pill { margin: 1px 0; }
 .market-table thead th {
   background: var(--surface-raised);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   height: 2.75rem;
   text-align: left;
   font-size: var(--fs-xs);
@@ -919,9 +935,6 @@ footer {
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
-  position: sticky;
-  top: 0;
-  z-index: 1;
 }
 .market-table th.num-cell { text-align: right; }
 .market-table th.sortable { cursor: pointer; user-select: none; transition: color var(--duration) var(--ease); }
@@ -951,7 +964,7 @@ footer {
 }
 
 .market-table td {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3);
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   color: var(--text);
@@ -1008,7 +1021,7 @@ footer {
   cursor: pointer;
   transition: color var(--duration) var(--ease);
 }
-.tip-btn::before { content: ''; position: absolute; inset: -0.6rem; } /* 44px hit area */
+.tip-btn::before { content: ''; position: absolute; inset: -0.75rem; } /* 20px + 2×12px = 44px hit area */
 .tip-btn .icon { width: 0.875rem; height: 0.875rem; }
 .tip-btn:hover, .tip-btn[aria-expanded="true"] { color: var(--accent); }
 .global-tip {
@@ -1064,7 +1077,7 @@ footer {
   max-width: 18rem;
   min-height: var(--target-min);
   background: var(--surface);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-sm);
   color: var(--text);
   font-family: var(--font-mono);
@@ -1212,6 +1225,7 @@ footer {
   transition: box-shadow 200ms var(--ease);
 }
 .chart-outer:not(.scrollable) .chart-y-axis { display: none; }
+.chart-wrap:focus-visible ~ .chart-y-axis { clip-path: inset(2px 0 2px 2px); }
 .chart-outer:not(.scrolled-start) .chart-y-axis {
   box-shadow: 8px 0 8px -8px color-mix(in srgb, var(--text) 35%, transparent);
 }
@@ -1239,7 +1253,7 @@ footer {
   min-height: var(--target-min);
   padding: 0 var(--space-2);
   background: var(--surface);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-sm);
   color: var(--text);
   font: inherit;
@@ -1256,7 +1270,8 @@ footer {
 }
 .check input { width: 1.125rem; height: 1.125rem; accent-color: var(--accent); cursor: pointer; }
 .table-count { margin-left: auto; font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
-.sort-mobile { display: none; }
+.sort-mobile, .toolbar-help { display: none; }
+.toolbar-help { align-items: center; min-height: var(--target-min); font-size: var(--fs-sm); }
 
 /* ============================================================
    RESPONSIVE: phones
@@ -1305,9 +1320,29 @@ footer {
   .field-inline { flex: 1 1 100%; min-width: 0; }
   .field-inline label { min-width: 6.5rem; }
   .field-inline .select { flex: 1; min-width: 0; width: 100%; }
-  .sort-mobile { display: flex; }
 
-  /* Tables collapse into one card per bond, labelled from data-label. */
+  .holding-header { flex-wrap: nowrap; }
+  .hm { flex-wrap: wrap; }
+  .hm-value { margin-left: auto; }
+}
+
+
+/* Laptop widths: tighten the table so all ten columns fit without scrolling. */
+@media (max-width: 1180px) {
+  .market-table { font-size: 0.8125rem; }
+  .market-table thead th, .market-table td { padding-left: var(--space-2); padding-right: var(--space-2); }
+  .market-table th:first-child, .market-table td:first-child { padding-left: var(--space-4); }
+  .market-table th:last-child,  .market-table td:last-child  { padding-right: var(--space-4); }
+  .market-table .tip-btn { margin-left: 0; }
+}
+
+/* Tablets and phones: tables become cards (the 10-column screener needs
+   ~1040px as a table). */
+@media (max-width: 1040px) {
+  .sort-mobile, .toolbar-help { display: flex; }
+
+  /* Tables collapse into one card per bond, labelled from data-label.
+     Keep in sync with CARD_LAYOUT in market.js (it makes the hidden thead inert). */
   .market-table { min-width: 0; display: block; }
   .market-table thead {
     position: absolute;
@@ -1318,7 +1353,7 @@ footer {
   .market-table tbody { display: block; }
   .market-table tbody tr {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-3) var(--space-2);
     padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border);
@@ -1334,6 +1369,7 @@ footer {
     white-space: normal;
     min-width: 0;
   }
+  .market-table td:first-child, .market-table td:last-child { padding: 0; }
   .market-table td::before {
     content: attr(data-label);
     display: block;
@@ -1349,9 +1385,9 @@ footer {
   .market-table td.upcoming-verdict-cell { grid-column: 1 / -1; min-width: 0; }
   .market-table td[data-label="AskYTM"] strong { color: var(--accent); }
 
-  .holding-header { flex-wrap: nowrap; }
-  .hm { flex-wrap: wrap; }
-  .hm-value { margin-left: auto; }
+}
+@media (max-width: 640px) {
+  .market-table tbody tr { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 339px) {
