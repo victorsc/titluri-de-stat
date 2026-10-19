@@ -14,7 +14,8 @@ Live at: https://victorsc.github.io/titluri-de-stat/
 public/               ← everything served by GitHub Pages
   index.html          ← main page: Chart.js yield history (Fidelis & Tezaur)
   market.html         ← secondary market screener + portfolio tracker
-  style.css           ← all site styles
+  style.css           ← all site styles + design tokens (see docs/design-system.md)
+  theme.js            ← light/dark toggle, fires 'themechange' for charts
   app.js              ← chart init, tab logic for index.html
   market.js           ← screener + portfolio logic for market.html
   favicon.svg
@@ -37,6 +38,7 @@ scripts/              ← Node.js tooling (not served)
 
 docs/                 ← developer documentation (not served)
   missing-emission-codes.md ← research on secondary-market bond emission dates
+  design-system.md    ← tokens, chart palette, type scale, component rules
 
 .github/workflows/
   deploy.yml          ← deploys public/ to GitHub Pages on every push to main
@@ -64,7 +66,12 @@ Every entry in `fidelis.json` / `tezaur.json`: `{ "d": "May 2026", "m": 3, "r": 
 - Canvas width = `max(containerWidth, labels.length × PX_PER_LABEL)` (26px, in `app.js`) so every label gets space
 - Legend is a custom HTML element above the scroll container (stays fixed while scrolling)
 - Charts open scrolled to the right (most recent data visible) via `requestAnimationFrame`
-- EUR chart (Fidelis) is lazy-initialized on first tab click
+- EUR and Donatori charts (Fidelis) are lazy-initialized on first tab click
+- Series colors come from fixed per-maturity CSS tokens (`--mat-N`, mapped by `MAT_SLOT` in `app.js`); charts repaint on `themechange`
+
+## Design system
+
+See `docs/design-system.md`. Components use semantic tokens only (`--surface`, `--text-muted`, `--positive`…) — no raw hex in component rules. Dark is default; light follows the OS or the header toggle (`<html data-theme>`).
 
 ## Running the scraper
 

@@ -33,6 +33,17 @@ function init() {
   setupTabs();
   setupTooltips();
   setupHoldingForm(issued);
+  setupDespreLink();
+}
+
+// The intro's "Cum funcționează" link opens the first explainer.
+function setupDespreLink() {
+  document.querySelectorAll('a[href="#despre"]').forEach(a => {
+    a.addEventListener('click', () => {
+      const first = document.querySelector('#despre details');
+      if (first) first.open = true;
+    });
+  });
 }
 
 // ===== Emission Date Lookup =====
@@ -101,7 +112,7 @@ function buildEmissionMap(fid) {
 function showFreshness() {
   const el = document.getElementById('freshness-badge');
   if (!el || !_mkt.transaction_date) return;
-  el.textContent = 'Date: ' + _mkt.transaction_date;
+  el.textContent = 'Prețuri BVB din ' + formatDate(_mkt.transaction_date);
   el.hidden = false;
 }
 
@@ -203,6 +214,16 @@ function computeBuyLabels(issued) {
   return out;
 }
 
+// ===== Icons =====
+const svgIcon = (d, w = 2) => `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON_INFO  = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>');
+const ICON_X     = svgIcon('<path d="M18 6 6 18M6 6l12 12"/>');
+const ICON_CHECK = svgIcon('<path d="M20 6 9 17l-5-5"/>', 2.5);
+const ICON_SWAP  = svgIcon('<path d="M7 16V4M3 8l4-4 4 4M17 8v12M21 16l-4 4-4-4"/>');
+
+const tipBtn = (name, text) =>
+  `<button class="tip-btn" type="button" aria-label="Ce înseamnă ${name}?" data-tip="${text}">${ICON_INFO}</button>`;
+
 // ===== Screener =====
 const TH_TIPS = {
   Coupon:   'Rata nominală anuală a dobânzii plătite de emitent, ca % din valoarea nominală.',
@@ -217,30 +238,88 @@ function buildScreener(issued, labels) {
   renderScreenerPanel('s-eur-panel', issued.filter(s => s.Currency === 'EUR'), labels);
 }
 
+const BAND_LABELS = { '0-1': 'sub 1 an', '1-2': '1–2 ani', '2-3': '2–3 ani', '3-5': '3–5 ani', '5+': 'peste 5 ani' };
+
+// The sort <select> stands in for the column headers, which are hidden
+// when the table collapses into cards on narrow screens.
+const SORT_OPTIONS = [
+  ['Maturity:asc', 'Maturitate'],
+  ['AskYTM:desc',  'AskYTM, descrescător'],
+  ['Coupon:desc',  'Cupon, descrescător'],
+  ['Spread:asc',   'Spread, crescător'],
+  ['AskPrice:asc', 'Preț Ask, crescător'],
+];
+
 function renderScreenerPanel(panelId, bonds, labels) {
   const panel = document.getElementById(panelId);
+  const ccy = panelId.includes('eur') ? 'eur' : 'ron';
+  const bands = BANDS.filter(b => bonds.some(s => bandOf(s.Maturity) === b));
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'table-toolbar';
+  toolbar.innerHTML = `
+    <div class="field-inline">
+      <label for="band-${ccy}">Timp rămas</label>
+      <select id="band-${ccy}" class="select">
+        <option value="">Toate</option>
+        ${bands.map(b => `<option value="${b}">${BAND_LABELS[b]}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field-inline sort-mobile">
+      <label for="sort-${ccy}">Sortează după</label>
+      <select id="sort-${ccy}" class="select">
+        ${SORT_OPTIONS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}
+      </select>
+    </div>
+    <label class="check">
+      <input type="checkbox" id="liquid-${ccy}" />
+      Doar lichide
+    </label>
+    <span class="table-count" aria-live="polite"></span>`;
+
   const wrap = document.createElement('div');
   wrap.className = 'table-wrap';
   const table = buildScreenerTable(bonds, labels);
   wrap.appendChild(table);
-  panel.appendChild(wrap);
-  attachSort(table, 'Maturity', true);
+  panel.append(toolbar, wrap);
+  const sortBy = attachSort(table, 'Maturity', true);
+
+  const bandSel = toolbar.querySelector('#band-' + ccy);
+  const liquidChk = toolbar.querySelector('#liquid-' + ccy);
+  const countEl = toolbar.querySelector('.table-count');
+  const applyFilter = () => {
+    let shown = 0;
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      const ok = (!bandSel.value || tr.dataset.band === bandSel.value) &&
+                 (!liquidChk.checked || tr.dataset.liquid === '1');
+      tr.hidden = !ok;
+      if (ok) shown++;
+    });
+    countEl.textContent = shown === 1 ? '1 obligațiune' : `${shown} obligațiuni`;
+  };
+  bandSel.addEventListener('change', applyFilter);
+  liquidChk.addEventListener('change', applyFilter);
+  toolbar.querySelector('#sort-' + ccy).addEventListener('change', e => {
+    const [col, dir] = e.target.value.split(':');
+    sortBy(col, dir === 'asc');
+  });
+  applyFilter();
 }
 
 function buildScreenerTable(bonds, labels) {
   const table = document.createElement('table');
   table.className = 'market-table';
   table.innerHTML = `<thead><tr>
-    <th data-sort="Symbol" class="sortable">Simbol</th>
-    <th data-sort="IssueDate" class="sortable">Emisă</th>
-    <th data-sort="Maturity" class="sortable">Maturitate</th>
-    <th data-sort="TTM" class="sortable">Scadentă</th>
-    <th data-sort="Coupon" class="sortable">Cupon <button class="tip-btn" type="button" data-tip="${TH_TIPS.Coupon}">ⓘ</button></th>
-    <th data-sort="AskYTM" class="sortable">AskYTM <button class="tip-btn" type="button" data-tip="${TH_TIPS.AskYTM}">ⓘ</button></th>
-    <th data-sort="BidYTM" class="sortable">BidYTM <button class="tip-btn" type="button" data-tip="${TH_TIPS.BidYTM}">ⓘ</button></th>
-    <th data-sort="Spread" class="sortable">Spread <button class="tip-btn" type="button" data-tip="${TH_TIPS.Spread}">ⓘ</button></th>
-    <th data-sort="AskPrice" class="sortable">Preț Ask <button class="tip-btn" type="button" data-tip="${TH_TIPS.AskPrice}">ⓘ</button></th>
-    <th>Eticheta</th>
+    <th scope="col" data-sort="Symbol" class="sortable">Simbol</th>
+    <th scope="col" data-sort="IssueDate" class="sortable">Emisă</th>
+    <th scope="col" data-sort="Maturity" class="sortable">Maturitate</th>
+    <th scope="col" data-sort="TTM" class="sortable">Timp rămas</th>
+    <th scope="col" data-sort="Coupon" class="sortable num-cell">Cupon ${tipBtn('Cupon', TH_TIPS.Coupon)}</th>
+    <th scope="col" data-sort="AskYTM" class="sortable num-cell">AskYTM ${tipBtn('AskYTM', TH_TIPS.AskYTM)}</th>
+    <th scope="col" data-sort="BidYTM" class="sortable num-cell">BidYTM ${tipBtn('BidYTM', TH_TIPS.BidYTM)}</th>
+    <th scope="col" data-sort="Spread" class="sortable num-cell">Spread ${tipBtn('Spread', TH_TIPS.Spread)}</th>
+    <th scope="col" data-sort="AskPrice" class="sortable num-cell">Preț Ask ${tipBtn('Preț Ask', TH_TIPS.AskPrice)}</th>
+    <th scope="col">Etichetă</th>
   </tr></thead><tbody></tbody>`;
 
   const tbody = table.querySelector('tbody');
@@ -259,26 +338,29 @@ function buildScreenerRow(s, lbl) {
   const tr = document.createElement('tr');
   Object.assign(tr.dataset, {
     Symbol: s.Symbol,
-    IssueDate: emissionLabel === '—' ? 'z' : emissionLabel,
-    Maturity: s.Maturity,
+    // Timestamps, so dates sort chronologically (unknown emission sorts last).
+    IssueDate: parseEmissionDate(emissionLabel)?.getTime() ?? Number.MAX_SAFE_INTEGER,
+    Maturity: new Date(s.Maturity).getTime(),
     TTM: ttm.toFixed(4),
     Coupon: s.Coupon,
     AskYTM: s.AskYTM,
     BidYTM: s.BidYTM,
     Spread: (spread).toFixed(4),
     AskPrice: s.AskPrice,
+    band: bandOf(s.Maturity),
+    liquid: isLiquid(s) ? '1' : '0',
   });
   tr.innerHTML = `
     <td data-label="Simbol"><code class="sym">${s.Symbol}</code></td>
     <td data-label="Emisă">${emissionLabel}</td>
     <td data-label="Maturitate">${formatDate(s.Maturity)}</td>
-    <td data-label="Scadentă">${yrsLeftLabel(s.Maturity)}</td>
+    <td data-label="Timp rămas">${yrsLeftLabel(s.Maturity)}</td>
     <td data-label="Cupon" class="num-cell">${fmtPct(s.Coupon)}</td>
     <td data-label="AskYTM" class="num-cell"><strong>${fmtPct(s.AskYTM)}</strong></td>
     <td data-label="BidYTM" class="num-cell">${fmtPct(s.BidYTM)}</td>
     <td data-label="Spread" class="num-cell ${spreadClass}">${fmtPct(spread)}</td>
     <td data-label="Preț Ask" class="num-cell">${(+s.AskPrice).toFixed(2)}</td>
-    <td data-label="Eticheta">${pillHtml(lbl)}</td>
+    <td data-label="Etichetă">${pillHtml(lbl)}</td>
   `;
   return tr;
 }
@@ -291,28 +373,43 @@ function pillHtml(lbl) {
 }
 
 function attachSort(table, defaultCol, defaultAsc) {
+  const setSorted = (th, asc) => {
+    table.querySelectorAll('th[data-sort]').forEach(t => {
+      t.classList.remove('sort-asc', 'sort-desc');
+      t.setAttribute('aria-sort', 'none');
+    });
+    th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+    th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
+  };
   const initTh = table.querySelector(`th[data-sort="${defaultCol}"]`);
-  if (initTh) initTh.classList.add(defaultAsc ? 'sort-asc' : 'sort-desc');
+  if (initTh) setSorted(initTh, defaultAsc);
 
   table.querySelectorAll('th[data-sort]').forEach(th => {
+    th.tabIndex = 0;
+    th.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.tip-btn')) { e.preventDefault(); th.click(); }
+    });
     th.addEventListener('click', e => {
       if (e.target.closest('.tip-btn')) return;
-      const col = th.dataset.sort;
-      const asc = !th.classList.contains('sort-asc');
-      table.querySelectorAll('th').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
-      th.classList.add(asc ? 'sort-asc' : 'sort-desc');
-      const tbody = table.querySelector('tbody');
-      Array.from(tbody.querySelectorAll('tr'))
-        .sort((a, b) => {
-          const av = a.dataset[col] ?? '', bv = b.dataset[col] ?? '';
-          const an = parseFloat(av), bn = parseFloat(bv);
-          return !isNaN(an) && !isNaN(bn)
-            ? (asc ? an - bn : bn - an)
-            : (asc ? av.localeCompare(bv) : bv.localeCompare(av));
-        })
-        .forEach(r => tbody.appendChild(r));
+      sortBy(th.dataset.sort, !th.classList.contains('sort-asc'));
     });
   });
+
+  function sortBy(col, asc) {
+    const th = table.querySelector(`th[data-sort="${col}"]`);
+    if (th) setSorted(th, asc);
+    const tbody = table.querySelector('tbody');
+    Array.from(tbody.querySelectorAll('tr'))
+      .sort((a, b) => {
+        const av = a.dataset[col] ?? '', bv = b.dataset[col] ?? '';
+        const an = parseFloat(av), bn = parseFloat(bv);
+        return !isNaN(an) && !isNaN(bn)
+          ? (asc ? an - bn : bn - an)
+          : (asc ? av.localeCompare(bv) : bv.localeCompare(av));
+      })
+      .forEach(r => tbody.appendChild(r));
+  }
+  return sortBy;
 }
 
 // ===== Upcoming Subscriptions =====
@@ -346,7 +443,7 @@ function buildUpcoming(upcoming, issued) {
       <span class="upcoming-ytm">${fmtPct(peer.AskYTM)} AskYTM</span>
       <span class="upcoming-ttm">${yrsLeftLabel(peer.Maturity)}</span>
       · preț ${fmtNum(dirtyAskPct)}% · spread ${fmtPct(spread)}
-      · la ${BUDGET.toLocaleString('ro-RO')} ${ccy}: <strong>${sign}${fmtNum(diff)} ${ccy}</strong> vs subscrierea noua (tinut pana la maturitate, dobanda simpla)
+      · la ${BUDGET.toLocaleString('ro-RO')} ${ccy}: <strong>${sign}${fmtNum(diff)} ${ccy}</strong> față de subscrierea nouă (ținut până la maturitate, dobândă simplă)
     </div>`;
   }
 
@@ -376,16 +473,16 @@ function buildUpcoming(upcoming, issued) {
     let verdictLabel, verdictClass, optionsHtml = '';
 
     if (!bestByYTM) {
-      verdictLabel = 'Fara comparabil';
+      verdictLabel = 'Fără comparabil';
       verdictClass = 'pill-fair';
-      optionsHtml = '<span class="verdict-detail">nu exista obligatiuni lichide cu maturitate similara (±4 luni)</span>';
+      optionsHtml = '<span class="verdict-detail">nu există obligațiuni lichide cu maturitate similară (±4 luni)</span>';
     } else if (bestByYTM.AskYTM <= s.Coupon) {
-      verdictLabel = 'Subscriere avantajoasa';
+      verdictLabel = 'Subscriere avantajoasă';
       verdictClass = 'pill-good';
       const spread = bestByYTM.BidYTM - bestByYTM.AskYTM;
       optionsHtml = `<span class="verdict-detail">cel mai bun comparabil: ${bestByYTM.Symbol} la ${fmtPct(bestByYTM.AskYTM)} AskYTM, spread ${fmtPct(spread)}</span>`;
     } else {
-      verdictLabel = 'Piata mai buna';
+      verdictLabel = 'Piața oferă mai mult';
       verdictClass = 'pill-bad';
       optionsHtml = optionHtml(bestByYTM, s.Coupon, ccy, '1.');
       if (secondOption) {
@@ -398,10 +495,10 @@ function buildUpcoming(upcoming, issued) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td data-label="Simbol"><code class="sym">${cleanSym}</code>${donorTag}</td>
-      <td data-label="Moneda">${ccy}</td>
+      <td data-label="Monedă">${ccy}</td>
       <td data-label="Maturitate">${formatDate(s.Maturity)}</td>
-      <td data-label="Scadentă">${yrsLeftLabel(s.Maturity)}</td>
-      <td data-label="Cupon subscriere" class="num-cell"><strong>${fmtPct(s.Coupon)}</strong></td>
+      <td data-label="Timp rămas">${yrsLeftLabel(s.Maturity)}</td>
+      <td data-label="Cupon" class="num-cell"><strong>${fmtPct(s.Coupon)}</strong></td>
       <td data-label="Verdict" class="upcoming-verdict-cell">
         <span class="status-pill ${verdictClass}">${verdictLabel}</span>
         ${optionsHtml}
@@ -439,7 +536,7 @@ function renderHoldingsTab(panelId, currency, issued) {
 
   const forCcy = _holdings.filter(h => currencyOf(h.symbol, issued) === currency);
   if (!forCcy.length) {
-    container.innerHTML = `<p class="empty-state">Nicio subscriptie adaugata pentru ${currency}. Foloseste formularul de mai sus.</p>`;
+    container.innerHTML = `<p class="empty-state">Nicio obligațiune în ${currency} adăugată încă. Folosește formularul de mai sus.</p>`;
     return;
   }
   forCcy.forEach(h => {
@@ -447,8 +544,8 @@ function renderHoldingsTab(panelId, currency, issued) {
     if (!m) {
       const errDiv = document.createElement('div');
       errDiv.className = 'holding-card holding-error';
-      errDiv.innerHTML = `<code class="sym">${h.symbol}</code> — date de piata indisponibile.
-        <button class="remove-btn" aria-label="Sterge">×</button>`;
+      errDiv.innerHTML = `<code class="sym">${h.symbol}</code> — date de piață indisponibile.
+        <button class="remove-btn" type="button" aria-label="Șterge ${h.symbol} din portofoliu">${ICON_X}</button>`;
       errDiv.querySelector('.remove-btn').addEventListener('click', () => {
         _holdings = _holdings.filter(x => x.symbol !== h.symbol);
         saveHoldings();
@@ -499,32 +596,32 @@ function buildHoldingCard(h, m, issued) {
     const grandHeld  = cashFromCoupons + couponsRemaining * annualCoupon + FACE;
 
     couponsReceivedHtml = `
-      <div class="hm"><span class="hm-label">Cupoane incasate pana azi</span>
+      <div class="hm"><span class="hm-label">Cupoane încasate până azi</span>
         <span class="hm-value">${couponsReceived} × ${fmtNum(annualCoupon)} = <strong>${fmtNum(cashFromCoupons)} ${ccy}</strong></span></div>
-      <div class="hm"><span class="hm-label">Cupon acumulat (neincasat, inclus in pret murdar)</span>
+      <div class="hm"><span class="hm-label">Cupon acumulat (neîncasat, inclus în prețul murdar)</span>
         <span class="hm-value">${fmtNum(accrued)} ${ccy}</span></div>
-      <div class="hm"><span class="hm-label">Urmatorul cupon estimat</span>
+      <div class="hm"><span class="hm-label">Următorul cupon estimat</span>
         <span class="hm-value">${nextCoupon ? formatDate(nextCoupon) : '—'}</span></div>`;
 
     accruedHtml = `
       <div class="sim-block sim-sell">
-        <div class="sim-title">Daca vinzi azi</div>
-        <div class="hm"><span class="hm-label">Valoare vanzare (pret murdar BVB)</span>
+        <div class="sim-title">Dacă vinzi azi</div>
+        <div class="hm"><span class="hm-label">Valoare la vânzare (preț murdar BVB)</span>
           <span class="hm-value">${fmtNum(sellDirty)} ${ccy}</span></div>
-        <div class="hm hm-highlight"><span class="hm-label">Total incasat (cupoane + vanzare)</span>
+        <div class="hm hm-highlight"><span class="hm-label">Total încasat (cupoane + vânzare)</span>
           <span class="hm-value">${fmtNum(grandSold)} ${ccy}</span></div>
       </div>
       <div class="sim-block sim-hold">
-        <div class="sim-title">Daca tii pana la maturitate</div>
-        <div class="hm"><span class="hm-label">Cupoane ramase (${couponsRemaining} × ${fmtNum(annualCoupon)})</span>
+        <div class="sim-title">Dacă ții până la maturitate</div>
+        <div class="hm"><span class="hm-label">Cupoane rămase (${couponsRemaining} × ${fmtNum(annualCoupon)})</span>
           <span class="hm-value">${fmtNum(couponsRemaining * annualCoupon)} ${ccy}</span></div>
         <div class="hm"><span class="hm-label">Principal la maturitate</span>
           <span class="hm-value">${fmtNum(FACE)} ${ccy}</span></div>
-        <div class="hm hm-highlight"><span class="hm-label">Total incasat</span>
+        <div class="hm hm-highlight"><span class="hm-label">Total încasat</span>
           <span class="hm-value">${fmtNum(grandHeld)} ${ccy}</span></div>
       </div>`;
   } else {
-    accruedHtml = `<p class="sim-no-date">Data emisiei necunoscuta — simularea nu poate fi calculata.</p>`;
+    accruedHtml = `<p class="sim-no-date">Data emisiunii e necunoscută, așa că simularea nu poate fi calculată.</p>`;
   }
 
   const signal = computeSellSignal(h, m, issued);
@@ -542,11 +639,11 @@ function buildHoldingCard(h, m, issued) {
           ${emissionLabel ? 'emis ' + emissionLabel + ' ·' : ''} cupon ${fmtPct(m.Coupon)} · maturitate ${formatDate(m.Maturity)}
         </span>
       </div>
-      <button class="remove-btn" aria-label="Sterge aceasta subscriptie">×</button>
+      <button class="remove-btn" type="button" aria-label="Șterge ${h.symbol} din portofoliu">${ICON_X}</button>
     </div>
     <div class="holding-base">
       <div class="hm"><span class="hm-label">Simulare pentru</span>
-        <span class="hm-value"><strong>${fmtNum(FACE)} ${ccy}</strong> subscrise la emisie (pret 100%)</span></div>
+        <span class="hm-value"><strong>${fmtNum(FACE)} ${ccy}</strong> subscriși la emisiune (preț 100%)</span></div>
       ${couponsReceivedHtml}
     </div>
     <div class="holding-sim">
@@ -568,16 +665,16 @@ function buildHoldingCard(h, m, issued) {
 
 function renderSignalHtml(signal, m) {
   if (signal.signal === 'sell') {
-    return `<span class="sig-label sig-sell-label">Merita vanzarea</span>
-      ${signal.bestAlt.Symbol} ofera <strong>${fmtPct(signal.bestAlt.AskYTM)}</strong> AskYTM
-      fata de <strong>${fmtPct(m.BidYTM)}</strong> BidYTM al obligatiunii tale
-      (diferenta: +${fmtPct(signal.gap)}).
-      Maturitate alternativa: ${formatDate(signal.bestAlt.Maturity)}.`;
+    return `<span class="sig-label sig-sell-label">${ICON_SWAP}Merită vânzarea</span>
+      ${signal.bestAlt.Symbol} oferă <strong>${fmtPct(signal.bestAlt.AskYTM)}</strong> AskYTM
+      față de <strong>${fmtPct(m.BidYTM)}</strong> BidYTM al obligațiunii tale
+      (diferență: +${fmtPct(signal.gap)}).
+      Maturitatea alternativei: ${formatDate(signal.bestAlt.Maturity)}.`;
   }
   const altText = signal.bestAlt
-    ? `Cea mai buna alternativa pe termen similar: ${signal.bestAlt.Symbol} la ${fmtPct(signal.bestAlt.AskYTM)} AskYTM.`
-    : 'Nu exista alternativa superioara disponibila in prezent.';
-  return `<span class="sig-label sig-hold-label">Pastreaza</span>
+    ? `Cea mai bună alternativă pe termen similar: ${signal.bestAlt.Symbol} la ${fmtPct(signal.bestAlt.AskYTM)} AskYTM.`
+    : 'Nu există momentan o alternativă mai bună.';
+  return `<span class="sig-label sig-hold-label">${ICON_CHECK}Păstrează</span>
     BidYTM curent: <strong>${fmtPct(m.BidYTM)}</strong>. ${altText}`;
 }
 
@@ -605,7 +702,8 @@ function setupHoldingForm(issued) {
   const form  = document.getElementById('add-holding-form');
   const dl    = document.getElementById('symbols-list');
   const errEl = document.getElementById('form-error');
-  if (!form || !dl || !errEl) return;
+  const input = document.getElementById('h-symbol');
+  if (!form || !dl || !errEl || !input) return;
 
   issued.forEach(s => {
     const opt = document.createElement('option');
@@ -617,14 +715,15 @@ function setupHoldingForm(issued) {
   form.addEventListener('submit', e => {
     e.preventDefault();
     errEl.hidden = true;
+    input.removeAttribute('aria-invalid');
 
-    const symbol = form.querySelector('#h-symbol').value.trim().toUpperCase();
+    const symbol = input.value.trim().toUpperCase();
     if (!symbol) return;
 
     const mkt = issued.find(s => s.Symbol === symbol);
-    if (!mkt) { showErr('Simbolul nu a fost gasit. Verifica scrierea (ex: R2608A).'); return; }
+    if (!mkt) { showErr('Simbolul nu a fost găsit. Verifică scrierea (ex. R2608A) sau alege din listă.'); return; }
     if (_holdings.find(x => x.symbol === symbol)) {
-      showErr('Acest simbol este deja in portofoliu.'); return;
+      showErr('Acest simbol este deja în portofoliu.'); return;
     }
 
     _holdings.push({ symbol });
@@ -637,19 +736,34 @@ function setupHoldingForm(issued) {
     renderHoldingsTab('p-eur-panel', 'EUR', issued);
   });
 
-  function showErr(msg) { errEl.textContent = msg; errEl.hidden = false; }
+  function showErr(msg) {
+    errEl.textContent = msg;
+    errEl.hidden = false;
+    input.setAttribute('aria-invalid', 'true');
+    input.focus();
+  }
 }
 
 // ===== Tab Switching =====
 function setupTabs() {
   document.querySelectorAll('[role="tablist"]').forEach(tablist => {
-    tablist.querySelectorAll('[role="tab"]').forEach(btn => {
+    const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+    tabs.forEach((btn, i) => {
       btn.addEventListener('click', () => {
         const card = tablist.closest('.card');
-        tablist.querySelectorAll('[role="tab"]').forEach(b => b.setAttribute('aria-selected', 'false'));
+        tabs.forEach(b => { b.setAttribute('aria-selected', 'false'); b.tabIndex = -1; });
         card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         btn.setAttribute('aria-selected', 'true');
+        btn.tabIndex = 0;
         document.getElementById(btn.getAttribute('aria-controls')).classList.add('active');
+      });
+      btn.addEventListener('keydown', e => {
+        const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+        if (!step) return;
+        const next = tabs[(i + step + tabs.length) % tabs.length];
+        next.focus();
+        next.click();
+        e.preventDefault();
       });
     });
   });
@@ -664,26 +778,36 @@ function setupTooltips() {
   box.hidden = true;
   document.body.appendChild(box);
 
+  let owner = null;
+  const hide = () => {
+    box.hidden = true;
+    if (owner) { owner.setAttribute('aria-expanded', 'false'); owner.removeAttribute('aria-describedby'); }
+    owner = null;
+  };
+
   document.addEventListener('click', e => {
     const btn = e.target.closest('.tip-btn');
     if (btn) {
       e.stopPropagation();
       const text = btn.dataset.tip;
       const wasShowing = !box.hidden && box.dataset.src === text;
-      box.hidden = true;
+      hide();
       if (!wasShowing) {
+        owner = btn;
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-describedby', 'global-tip');
         const rect = btn.getBoundingClientRect();
         box.textContent = text;
         box.dataset.src = text;
         box.hidden = false;
         box.style.top = (rect.bottom + 8 + window.scrollY) + 'px';
         const cx = rect.left + rect.width / 2 + window.scrollX;
-        box.style.left = Math.max(8, Math.min(cx, window.innerWidth + window.scrollX - 228)) + 'px';
+        box.style.left = Math.max(window.scrollX + 144, Math.min(cx, window.innerWidth + window.scrollX - 144)) + 'px';
         box.style.transform = 'translateX(-50%)';
       }
     } else {
-      box.hidden = true;
+      hide();
     }
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') box.hidden = true; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
 }
