@@ -158,8 +158,11 @@ function fmtNum(v) {
   return (+v).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// "15 dec 2026": same month abbreviations as the emission labels (roLabel),
+// rather than Intl's "dec." / "sept.".
 function formatDate(isoStr) {
-  return new Date(isoStr).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric' });
+  const d = new Date(isoStr);
+  return `${d.getDate()} ${_MONTH_RO[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function yrsLeftLabel(maturityStr) {
@@ -276,7 +279,7 @@ function renderScreenerPanel(panelId, bonds, labels) {
   toolbar.className = 'table-toolbar';
   toolbar.innerHTML = `
     <div class="field-inline">
-      <label for="band-${ccy}">Timp rămas</label>
+      <label for="band-${ccy}">Scadență</label>
       <select id="band-${ccy}" class="select">
         <option value="">Toate</option>
         ${bands.map(b => `<option value="${b}">${BAND_LABELS[b]}</option>`).join('')}
@@ -292,8 +295,11 @@ function renderScreenerPanel(panelId, bonds, labels) {
       <input type="checkbox" id="liquid-${ccy}" />
       Doar lichide
     </label>
-    <a class="toolbar-help" href="#glosar">Ce înseamnă coloanele?</a>
-    <span class="table-count" aria-live="polite"></span>`;
+    <div class="filter-status">
+      <span class="table-count" aria-live="polite"></span>
+      <button type="button" class="btn btn-ghost filter-reset" hidden>${ICON_X}Resetează</button>
+    </div>
+    <a class="toolbar-help" href="#glosar">Ce înseamnă coloanele?</a>`;
 
   const wrap = document.createElement('div');
   wrap.className = 'table-wrap';
@@ -306,6 +312,8 @@ function renderScreenerPanel(panelId, bonds, labels) {
   const bandSel = toolbar.querySelector('#band-' + ccy);
   const liquidChk = toolbar.querySelector('#liquid-' + ccy);
   const countEl = toolbar.querySelector('.table-count');
+  const resetBtn = toolbar.querySelector('.filter-reset');
+  const total = bonds.length;
   const applyFilter = () => {
     let shown = 0;
     table.querySelectorAll('tbody tr').forEach(tr => {
@@ -314,8 +322,18 @@ function renderScreenerPanel(panelId, bonds, labels) {
       tr.hidden = !ok;
       if (ok) shown++;
     });
-    countEl.textContent = shown === 1 ? '1 obligațiune' : `${shown} obligațiuni`;
+    const filtered = bandSel.value !== '' || liquidChk.checked;
+    const noun = (filtered ? total : shown) === 1 ? 'obligațiune' : 'obligațiuni';
+    countEl.textContent = filtered ? `${shown} din ${total} ${noun}` : `${total} ${noun}`;
+    countEl.classList.toggle('is-filtered', filtered);
+    resetBtn.hidden = !filtered;
   };
+  resetBtn.addEventListener('click', () => {
+    bandSel.value = '';
+    liquidChk.checked = false;
+    applyFilter();
+    bandSel.focus(); // the button hides itself; keep focus in the toolbar
+  });
   bandSel.addEventListener('change', applyFilter);
   liquidChk.addEventListener('change', applyFilter);
   sortSel.addEventListener('change', e => {

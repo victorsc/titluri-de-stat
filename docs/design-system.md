@@ -92,8 +92,9 @@ Exception: broker terms users see on BVB and broker platforms (AskYTM,
 BidYTM, Spread, Ask, Bid) stay as-is and are explained in the glossary. Emission
 labels in the data keep English month abbreviations (`"May 2026"`) because
 the scraper and validator key on them; `roLabel()` in `app.js` / `market.js`
-renders them as `mai 2026`, `apr–mai 2026`. Full dates use
-`toLocaleDateString('ro-RO')`.
+renders them as `mai 2026`, `apr–mai 2026`. Full dates use the same
+abbreviations without a dot (`formatDate()` in `market.js`: `17 sep 2027`),
+not Intl's `sept.`.
 
 Numbers use the Romanian format: decimal comma, dot for thousands
 (`6,20%`, `10.000,00 RON`). Format through `fmtDec()` (`app.js`) or
@@ -140,6 +141,7 @@ Bond symbols (`.sym`) use `--font-mono`.
 | Segmented tabs | `.tab-bar` › `.tab-bar-inner[role=tablist]` › `.tab-btn` | Roving tabindex, ←/→ keys. |
 | Legend chip | `.legend-item[aria-pressed]` | Toggles a series. |
 | Table | `.market-table` | Sticky header, `aria-sort`, keyboard-sortable headers, numeric columns right-aligned. |
+| Table toolbar | `.table-toolbar` › `.field-inline`, `.check`, `.filter-status` | Filters first, then the result count ("9 din 75 obligațiuni", bold while filtered) and a "Resetează" button that only shows while a filter is on. |
 | Status pill | `.status-pill.pill-good/fair/bad/illiquid` | |
 | Info tooltip | `.tip-btn` + `#global-tip` | Click/Enter to toggle, Esc to close, `aria-expanded`/`aria-describedby`. |
 | Accordion | `details.accordion` | Chevron rotates on open. |
