@@ -93,6 +93,12 @@ the scraper and validator key on them; `roLabel()` in `app.js` / `market.js`
 renders them as `mai 2026`, `apr–mai 2026`. Full dates use
 `toLocaleDateString('ro-RO')`.
 
+Numbers use the Romanian format: decimal comma, dot for thousands
+(`6,20%`, `10.000,00 RON`). Format through `fmtDec()` (`app.js`) or
+`fmtNum()` / `fmtPct()` (`market.js`), never `toFixed()` in visible text;
+`toFixed()` is only for `data-*` sort keys. Hand-written copy
+(`fun-facts.json`, HTML) follows the same rule.
+
 ## Typography
 
 Inter (already loaded), tabular numerals for all figures.

@@ -39,6 +39,10 @@ let _eurBuilt = false;
 let _donBuilt = false;
 const _charts = [];
 
+// Romanian number format: decimal comma (6,20%).
+const fmtDec = (v, min = 2, max = min) =>
+  v.toLocaleString('ro-RO', { minimumFractionDigits: min, maximumFractionDigits: max });
+
 const yearsLabel = m => `${m} ${Number(m) === 1 ? 'an' : 'ani'}`;
 
 // Data labels use English month abbreviations ("May 2026", "Apr–May 2026");
@@ -95,10 +99,10 @@ function latestRows(raw, tag = '') {
 function deltaHtml(row) {
   if (!row.prev) return '<span class="delta">nou</span>';
   const d = Math.round((row.r - row.prev.r) * 100) / 100;
-  const since = `față de ${roLabel(row.prev.d)} (${row.prev.r.toFixed(2)}%)`;
+  const since = `față de ${roLabel(row.prev.d)} (${fmtDec(row.prev.r)}%)`;
   if (d === 0) return `<span class="delta" title="Neschimbat ${since}">neschimbat<span class="visually-hidden"> ${since}</span></span>`;
   const up = d > 0;
-  const txt = `${up ? '+' : '−'}${Math.abs(d).toFixed(2)} pp`;
+  const txt = `${up ? '+' : '−'}${fmtDec(Math.abs(d))} pp`;
   return `<span class="delta ${up ? 'delta-up' : 'delta-down'}" title="${txt} ${since}">${up ? ICON_UP : ICON_DOWN}${txt}<span class="visually-hidden"> ${since}</span></span>`;
 }
 
@@ -107,7 +111,7 @@ function nowGroupHtml({ title, dot, date, rows, href, tab }) {
     .sort((a, b) => a.m - b.m || a.tag.localeCompare(b.tag))
     .map(r => `<li class="now-row">
       <span class="now-mat">${shapeSvg(r.m)}${yearsLabel(r.m)}${r.tag ? ' ' + r.tag : ''}</span>
-      <span class="now-rate">${r.r.toFixed(2)}<small>%</small></span>
+      <span class="now-rate">${fmtDec(r.r)}<small>%</small></span>
       ${deltaHtml(r)}
     </li>`).join('');
   return `<div class="now-group">
@@ -398,7 +402,7 @@ function buildChart(canvasId, labels, series, ariaLabel) {
           itemSort: (a, b) => b.parsed.y - a.parsed.y,
           filter: item => item.parsed.y != null,
           callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`,
+            label: ctx => ` ${ctx.dataset.label}: ${fmtDec(ctx.parsed.y)}%`,
           },
         },
       },
@@ -408,7 +412,7 @@ function buildChart(canvasId, labels, series, ariaLabel) {
           grid: { display: false },
         },
         y: {
-          ticks: { font: { size: 12 }, callback: v => v + '%' },
+          ticks: { font: { size: 12 }, callback: v => fmtDec(v, 0, 2) + '%' },
           grid: {},
         },
       },

@@ -152,7 +152,7 @@ function quartile(sorted, q) {
     : sorted[base];
 }
 
-function fmtPct(v) { return (+v).toFixed(2) + '%'; }
+function fmtPct(v) { return fmtNum(v) + '%'; }
 
 function fmtNum(v) {
   return (+v).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -378,7 +378,7 @@ function buildScreenerRow(s, lbl) {
     <td data-label="AskYTM" class="num-cell"><strong>${fmtPct(s.AskYTM)}</strong></td>
     <td data-label="BidYTM" class="num-cell">${fmtPct(s.BidYTM)}</td>
     <td data-label="Spread" class="num-cell ${spreadClass}">${fmtPct(spread)}</td>
-    <td data-label="Preț Ask" class="num-cell">${(+s.AskPrice).toFixed(2)}</td>
+    <td data-label="Preț Ask" class="num-cell">${fmtNum(s.AskPrice)}</td>
     <td data-label="Etichetă">${pillHtml(lbl)}</td>
   `;
   return tr;
