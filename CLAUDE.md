@@ -15,7 +15,7 @@ public/               ← everything served by GitHub Pages
   index.html          ← main page: Chart.js yield history (Fidelis & Tezaur)
   market.html         ← secondary market screener + portfolio tracker
   style.css           ← all site styles + design tokens (see docs/design-system.md)
-  theme.js            ← light/dark toggle, fires 'themechange' for charts
+  theme.js            ← light/dark toggle (fires 'themechange'), strips .html from the URL
   app.js              ← chart init, tab logic for index.html
   market.js           ← screener + portfolio logic for market.html
   favicon.svg
