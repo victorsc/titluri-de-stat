@@ -1,5 +1,11 @@
 'use strict';
 
+// GitHub Pages serves /market for market.html but can't redirect, so tidy the
+// address bar when someone lands on an old .html URL (no reload, no history entry).
+if (/\.html$/.test(location.pathname)) {
+  history.replaceState(null, '', location.pathname.replace(/(index)?\.html$/, '') + location.search + location.hash);
+}
+
 // Theme follows the OS until the visitor picks one with the header toggle.
 // The choice is stamped as <html data-theme> by an inline script in <head>
 // (so there's no flash) and announced via a 'themechange' event so canvases
