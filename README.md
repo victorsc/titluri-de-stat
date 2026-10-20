@@ -17,7 +17,7 @@ Interactive charts tracking the evolution of Romanian government bond yields (Fi
 | **Fidelis** | Listed on the Bucharest Stock Exchange (BVB) | EUR | 1, 2, 3, 5, 7, 10 years |
 | **Fidelis Donatori** | Blood-donor issues | RON + EUR | 1, 2, 3, 10 years |
 
-A second page, [`market.html`](https://victorsc.github.io/titluri-de-stat/market.html), is a secondary-market screener for listed Fidelis bonds (bid/ask prices, YTM, buy labels) with a local portfolio tracker.
+A second page, [`/market`](https://victorsc.github.io/titluri-de-stat/market), is a secondary-market screener for listed Fidelis bonds (bid/ask prices, YTM, buy labels) with a local portfolio tracker.
 
 Data sources: [fidelis.ro](https://www.fidelis.ro) (Ministerul Finanțelor) for issue rates; [fidelis.pacalab.ro](https://fidelis.pacalab.ro) for daily BVB quotes.
 
