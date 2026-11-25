@@ -10,6 +10,7 @@ const BANDS = ['0-1', '1-2', '2-3', '3-5', '5+'];
 const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
 
 // ===== Boot =====
+setupTabs();
 Promise.all([
   fetch('data/fidelis_yields.json').then(r => { if (!r.ok) throw r.status; return r.json(); }),
   fetch('data/fidelis.json').then(r => r.ok ? r.json() : null).catch(() => null),
@@ -30,7 +31,6 @@ function init() {
   buildScreener(issued, labels);
   buildUpcoming(upcoming, issued);
   buildPortfolio(issued);
-  setupTabs();
   setupTooltips();
   setupHoldingForm(issued);
   setupDespreLinks();
