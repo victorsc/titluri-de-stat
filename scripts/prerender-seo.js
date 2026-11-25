@@ -169,8 +169,10 @@ function maxDate(...dates) {
 
 function setSitemapLastmod(xml, loc, date) {
   if (!date) return xml;
-  const pattern = new RegExp(`(<loc>${escapeRegExp(loc)}</loc>\\s*)<lastmod>[^<]+</lastmod>`);
-  return xml.replace(pattern, `$1<lastmod>${date}</lastmod>`);
+  const locPattern = escapeRegExp(`<loc>${loc}</loc>`);
+  const existing = new RegExp(`(${locPattern}\\s*)<lastmod>[^<]+</lastmod>`);
+  if (existing.test(xml)) return xml.replace(existing, `$1<lastmod>${date}</lastmod>`);
+  return xml.replace(new RegExp(locPattern), `<loc>${loc}</loc>\n    <lastmod>${date}</lastmod>`);
 }
 
 function updateSitemapDates(latestEmissionDate, marketDate) {
