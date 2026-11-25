@@ -106,7 +106,7 @@ Checks labels, integer maturities, plausible rates, duplicate `(d, m)` pairs, an
 
 ## Deployment
 
-GitHub Pages is configured to deploy from GitHub Actions (source: `deploy.yml`). Every push to `main` triggers a deploy of the `public/` directory; the workflow first runs `node scripts/prerender-seo.js` so current data is present in the initial HTML for crawlers. Data-update commits also trigger a redeploy so users always see fresh data.
+GitHub Pages is configured to deploy from GitHub Actions (source: `deploy.yml`). Every push to `main` triggers a deploy of the `public/` directory; the workflow first runs `node scripts/prerender-seo.js`, which copies `public/` to `dist/` and injects current data into the initial HTML for crawlers. Data-update commits also trigger a redeploy so users always see fresh data.
 
 **One-time setup required** (already done for this repo): in GitHub repo Settings → Pages → Source, select "GitHub Actions".
 

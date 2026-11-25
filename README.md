@@ -97,5 +97,5 @@ Append new entries at the end of the relevant array and push. Every push to `mai
 
 - **Chart.js 4** — line charts with horizontal scroll, touch tooltips, click-to-toggle legend
 - **Vanilla JS + HTML** — no local build step, no framework
-- **GitHub Pages** — `public/` deployed via GitHub Actions (`deploy.yml`), with `scripts/prerender-seo.js` injecting crawlable data summaries into the HTML artifact
+- **GitHub Pages** — `public/` deployed via GitHub Actions (`deploy.yml`), with `scripts/prerender-seo.js` copying `public/` to `dist/` and injecting crawlable data summaries into the deployed HTML artifact
 - **GitHub Actions** — scheduled scraping via Node.js + cheerio

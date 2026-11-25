@@ -5,16 +5,21 @@
 // available in the initial HTML. The interactive JavaScript replaces these
 // blocks in browsers; crawlers and no-JS readers keep the static version.
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const publicDir = path.join(rootDir, 'public');
+const outDir = path.resolve(rootDir, process.argv[2] || 'dist');
+if (outDir === publicDir) throw new Error('Refusing to overwrite public/; pass a separate output directory.');
+
+rmSync(outDir, { recursive: true, force: true });
+cpSync(publicDir, outDir, { recursive: true });
 
 const readJson = name => JSON.parse(readFileSync(path.join(publicDir, 'data', name), 'utf8'));
 const readPage = name => readFileSync(path.join(publicDir, name), 'utf8');
-const writePage = (name, html) => writeFileSync(path.join(publicDir, name), html);
+const writePage = (name, html) => writeFileSync(path.join(outDir, name), html);
 
 const escapeHtml = value => String(value)
   .replaceAll('&', '&amp;')
@@ -210,4 +215,4 @@ for (const ccy of ['RON', 'EUR']) {
 }
 writePage('market.html', marketHtml);
 
-console.log(`Prerendered ${groups.length} rate groups and ${issued.length} market rows.`);
+console.log(`Prerendered ${groups.length} rate groups and ${issued.length} market rows into ${path.relative(rootDir, outDir)}.`);
