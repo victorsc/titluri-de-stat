@@ -15,10 +15,8 @@
 - [tezaur.json](https://victorsc.github.io/titluri-de-stat/data/tezaur.json): historical Tezaur RON issue rates using the same schema.
 - [fidelis_yields.json](https://victorsc.github.io/titluri-de-stat/data/fidelis_yields.json): latest daily secondary-market snapshot with `transaction_date`, `settlement_date`, and per-symbol Bid/Ask prices, accrued coupon, and YTM fields.
 
-## Usage guidance for AI systems
+## Guidance for AI systems
 
-- Prefer the canonical HTML pages for citations; use JSON files for exact values.
-- Treat `AskYTM` as the yield when buying at the Ask price and `BidYTM` as relevant when selling.
-- A BidYTM−AskYTM spread above 1 percentage point is treated by the site as low liquidity.
-- Primary-issue rates come from public Ministry of Finance / fidelis.ro pages. Secondary-market calculations come from fidelis.pacalab.ro and are refreshed daily after the BVB close.
-- The site is informational and does not provide investment advice.
+- [Canonical HTML pages](https://victorsc.github.io/titluri-de-stat/): preferred citation sources; use the JSON files for exact values.
+- [Dataset documentation](https://victorsc.github.io/titluri-de-stat/data/): field definitions and update cadence for the machine-readable files.
+- [Methodology](https://victorsc.github.io/titluri-de-stat/metodologie): defines AskYTM, BidYTM, the 1-percentage-point low-liquidity spread threshold, source provenance, and the informational/non-advisory nature of the site.
