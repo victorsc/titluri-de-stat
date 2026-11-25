@@ -471,6 +471,7 @@ function buildUpcoming(upcoming, issued) {
   const tbody = document.getElementById('upcoming-body');
   if (!section || !tbody) return;
   if (!upcoming.length) { section.hidden = true; return; }
+  section.hidden = false;
 
   const FOUR_MONTHS_MS = 4 * 30.4375 * 24 * 3600 * 1000;
   const BUDGET = 10000;

@@ -22,12 +22,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" as="style" onload="this.rel='stylesheet'" />
+  <link rel="preload" href="data/fidelis_yields.json" as="fetch" crossorigin="anonymous" />
+  <link rel="stylesheet" href="style.css" />
   <noscript>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet" />
     <style>.tab-bar{display:none}.tab-panel{display:block}</style>
   </noscript>
-  <link rel="preload" href="data/fidelis_yields.json" as="fetch" crossorigin="anonymous" />
-  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
@@ -70,7 +70,7 @@
   </div>
 
   <!-- ===== EMISIUNI VIITOARE ===== -->
-  <article class="card piata-card" id="upcoming-section" aria-labelledby="upcoming-title">
+  <article class="card piata-card" id="upcoming-section" aria-labelledby="upcoming-title" hidden>
     <div class="card-header">
       <span class="dot dot-fidelis" aria-hidden="true"></span>
       <h2 id="upcoming-title">Emisiuni viitoare</h2>
