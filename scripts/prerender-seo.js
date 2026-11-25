@@ -149,7 +149,7 @@ function marketSummary(mkt, issued) {
   return `Snapshotul BVB din ${date} include ${ronCount} Fidelis în RON și ${eurCount} în EUR.${bests ? ` Cel mai mare AskYTM lichid este ${bests}.` : ''}`;
 }
 
-function staticMarketTable(bonds, mkt) {
+function staticMarketTable(bonds, mkt, ccy) {
   const rows = bonds
     .slice()
     .sort((a, b) => new Date(a.Maturity) - new Date(b.Maturity))
@@ -167,7 +167,7 @@ function staticMarketTable(bonds, mkt) {
         </tr>`;
     }).join('\n');
 
-  return `<p class="seo-data-note">Snapshot static al prețurilor BVB din ${formatDate(mkt.transaction_date)}; valorile sunt regenerate în browser pentru filtrare și sortare.</p>
+  return `<p class="seo-data-note"><strong>Obligațiuni în ${ccy}.</strong> Snapshot static al prețurilor BVB din ${formatDate(mkt.transaction_date)}; valorile sunt regenerate în browser pentru filtrare și sortare.</p>
       <div class="table-wrap">
         <table class="market-table">
           <thead><tr>
@@ -204,7 +204,7 @@ for (const ccy of ['RON', 'EUR']) {
   marketHtml = replaceMarked(
     marketHtml,
     `market-${ccy.toLowerCase()}`,
-    staticMarketTable(issued.filter(s => s.Currency === ccy), market),
+    staticMarketTable(issued.filter(s => s.Currency === ccy), market, ccy),
   );
 }
 writePage('market.html', marketHtml);
