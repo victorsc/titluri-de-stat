@@ -17,12 +17,6 @@ if (outDir === publicDir) throw new Error('Refusing to overwrite public/; pass a
 rmSync(outDir, { recursive: true, force: true });
 cpSync(publicDir, outDir, { recursive: true });
 
-const generatedDate = new Date().toISOString().slice(0, 10);
-const sitemapPath = path.join(outDir, 'sitemap.xml');
-if (existsSync(sitemapPath)) {
-  writeFileSync(sitemapPath, readFileSync(sitemapPath, 'utf8').replace(/<lastmod>[^<]+<\/lastmod>/g, `<lastmod>${generatedDate}</lastmod>`));
-}
-
 const readJson = name => JSON.parse(readFileSync(path.join(publicDir, 'data', name), 'utf8'));
 const readPage = name => readFileSync(path.join(publicDir, name), 'utf8');
 const writePage = (name, html) => writeFileSync(path.join(outDir, name), html);
@@ -160,6 +154,36 @@ function marketSummary(mkt, issued) {
   return `Snapshotul BVB din ${date} include ${ronCount} Fidelis în RON și ${eurCount} în EUR.${bests ? ` Cel mai mare AskYTM lichid este ${bests}.` : ''}`;
 }
 
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function emissionIsoDate(label) {
+  const match = label?.match(/([A-Za-z]{3})[\s\S]*?(\d{4})/);
+  const month = match ? MONTH_ABBR.indexOf(match[1]) + 1 : 0;
+  if (!month) return null;
+  return `${match[2]}-${String(month).padStart(2, '0')}-01`;
+}
+
+function maxDate(...dates) {
+  return dates.filter(Boolean).sort().at(-1);
+}
+
+function setSitemapLastmod(xml, loc, date) {
+  if (!date) return xml;
+  const pattern = new RegExp(`(<loc>${escapeRegExp(loc)}</loc>\\s*)<lastmod>[^<]+</lastmod>`);
+  return xml.replace(pattern, `$1<lastmod>${date}</lastmod>`);
+}
+
+function updateSitemapDates(latestEmissionDate, marketDate) {
+  const sitemapPath = path.join(outDir, 'sitemap.xml');
+  if (!existsSync(sitemapPath)) return;
+  const base = 'https://victorsc.github.io/titluri-de-stat';
+  let xml = readFileSync(sitemapPath, 'utf8');
+  xml = setSitemapLastmod(xml, `${base}/`, latestEmissionDate);
+  xml = setSitemapLastmod(xml, `${base}/market`, marketDate);
+  xml = setSitemapLastmod(xml, `${base}/data/`, maxDate(latestEmissionDate, marketDate));
+  writeFileSync(sitemapPath, xml);
+}
+
 function staticMarketTable(bonds, mkt, ccy) {
   const referenceDate = new Date(`${mkt.transaction_date}T00:00:00Z`);
   const rows = bonds
@@ -220,5 +244,8 @@ for (const ccy of ['RON', 'EUR']) {
   );
 }
 writePage('market.html', marketHtml);
+
+const latestEmissionDate = maxDate(...groups.map(g => emissionIsoDate(g.date)));
+updateSitemapDates(latestEmissionDate, market.transaction_date);
 
 console.log(`Prerendered ${groups.length} rate groups and ${issued.length} market rows into ${path.relative(rootDir, outDir)}.`);
