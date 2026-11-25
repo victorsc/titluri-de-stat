@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Verify SEO prerendering
+        run: node scripts/prerender-seo.js
+
       # HEAD is the PR merge commit; HEAD^1 is the base branch tip.
       # Removals are allowed here (the PR is reviewed); the auto-update
       # workflows keep the strict no-shrink check.

@@ -272,6 +272,7 @@ const SORT_OPTIONS = [
 
 function renderScreenerPanel(panelId, bonds, labels) {
   const panel = document.getElementById(panelId);
+  panel.innerHTML = '';
   const ccy = panelId.includes('eur') ? 'eur' : 'ron';
   const bands = BANDS.filter(b => bonds.some(s => bandOf(s.Maturity) === b));
 

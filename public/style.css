@@ -372,6 +372,18 @@ main {
   color: var(--text-muted);
   font-size: var(--fs-md);
 }
+.seo-answer {
+  margin-top: var(--space-2);
+  max-width: 78ch;
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+.seo-data-note {
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
 
 .section-label {
   font-size: var(--fs-xs);
