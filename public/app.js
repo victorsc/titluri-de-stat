@@ -72,7 +72,8 @@ Promise.all([
 }).catch(err => {
   console.error('Failed to load data:', err);
   document.querySelectorAll('.chart-skeleton').forEach(el => el.classList.add('hidden'));
-  document.getElementById('now-grid').innerHTML = '';
+  const grid = document.getElementById('now-grid');
+  if (!grid.querySelector('.now-group')) grid.innerHTML = '';
   document.getElementById('load-error').hidden = false;
 });
 
