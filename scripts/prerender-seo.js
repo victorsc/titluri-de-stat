@@ -5,7 +5,7 @@
 // available in the initial HTML. The interactive JavaScript replaces these
 // blocks in browsers; crawlers and no-JS readers keep the static version.
 
-import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,6 +16,12 @@ if (outDir === publicDir) throw new Error('Refusing to overwrite public/; pass a
 
 rmSync(outDir, { recursive: true, force: true });
 cpSync(publicDir, outDir, { recursive: true });
+
+const generatedDate = new Date().toISOString().slice(0, 10);
+const sitemapPath = path.join(outDir, 'sitemap.xml');
+if (existsSync(sitemapPath)) {
+  writeFileSync(sitemapPath, readFileSync(sitemapPath, 'utf8').replace(/<lastmod>[^<]+<\/lastmod>/g, `<lastmod>${generatedDate}</lastmod>`));
+}
 
 const readJson = name => JSON.parse(readFileSync(path.join(publicDir, 'data', name), 'utf8'));
 const readPage = name => readFileSync(path.join(publicDir, name), 'utf8');
