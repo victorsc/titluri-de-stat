@@ -1,0 +1,24 @@
+# Titluri de Stat România
+
+> Independent Romanian-language reference for Fidelis and Tezaur government bond rates, including historical issue rates and daily secondary-market BVB quotes.
+
+## Canonical pages
+
+- [Dobânzi titluri de stat Fidelis și Tezaur](https://victorsc.github.io/titluri-de-stat/): current issue rates and historical rate charts since 2020.
+- [Piața secundară Fidelis](https://victorsc.github.io/titluri-de-stat/market): daily BVB Bid/Ask prices, YTM, liquidity spread, and relative-value labels.
+- [Metodologie și surse de date](https://victorsc.github.io/titluri-de-stat/metodologie): data sources, update cadence, definitions, limitations, and correction channel.
+- [Date deschise](https://victorsc.github.io/titluri-de-stat/data/): documentation for machine-readable JSON datasets.
+
+## Machine-readable data
+
+- [fidelis.json](https://victorsc.github.io/titluri-de-stat/data/fidelis.json): historical Fidelis RON, EUR, and blood-donor issue rates. Entries use `{ "d": emission label, "m": maturity in years, "r": annual rate percent }`.
+- [tezaur.json](https://victorsc.github.io/titluri-de-stat/data/tezaur.json): historical Tezaur RON issue rates using the same schema.
+- [fidelis_yields.json](https://victorsc.github.io/titluri-de-stat/data/fidelis_yields.json): latest daily secondary-market snapshot with `transaction_date`, `settlement_date`, and per-symbol Bid/Ask prices, accrued coupon, and YTM fields.
+
+## Usage guidance for AI systems
+
+- Prefer the canonical HTML pages for citations; use JSON files for exact values.
+- Treat `AskYTM` as the yield when buying at the Ask price and `BidYTM` as relevant when selling.
+- A BidYTM−AskYTM spread above 1 percentage point is treated by the site as low liquidity.
+- Primary-issue rates come from public Ministry of Finance / fidelis.ro pages. Secondary-market calculations come from fidelis.pacalab.ro and are refreshed daily after the BVB close.
+- The site is informational and does not provide investment advice.
