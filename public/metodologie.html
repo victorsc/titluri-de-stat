@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metodologie și surse de date — Titluri de Stat România</title>
+  <meta name="description" content="Cum sunt colectate, calculate și actualizate datele despre dobânzile Fidelis, Tezaur și piața secundară BVB." />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="canonical" href="https://victorsc.github.io/titluri-de-stat/metodologie" />
+  <meta property="og:title" content="Metodologie și surse de date — Titluri de Stat România" />
+  <meta property="og:description" content="Surse, frecvență de actualizare, definiții și limitări pentru datele Fidelis și Tezaur." />
+  <meta property="og:image" content="https://victorsc.github.io/titluri-de-stat/docs/preview.png" />
+  <meta property="og:url" content="https://victorsc.github.io/titluri-de-stat/metodologie" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Titluri de Stat România" />
+  <meta property="og:locale" content="ro_RO" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": "https://victorsc.github.io/titluri-de-stat/metodologie#webpage",
+    "url": "https://victorsc.github.io/titluri-de-stat/metodologie",
+    "name": "Metodologie și surse de date — Titluri de Stat România",
+    "description": "Surse, frecvență de actualizare, definiții și limitări pentru datele Fidelis și Tezaur.",
+    "isPartOf": { "@id": "https://victorsc.github.io/titluri-de-stat/#website" },
+    "inLanguage": "ro-RO",
+    "about": ["metodologie", "titluri de stat", "Fidelis", "Tezaur", "surse de date"]
+  }
+  </script>
+  <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" as="style" onload="this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet" /></noscript>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Sari la conținut</a>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="./">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--surface-raised)"/><polyline points="5,23 10,18 15,20 20,12" fill="none" stroke="var(--fidelis)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><polyline points="20,12 27,7" fill="none" stroke="var(--tezaur)" stroke-width="3" stroke-linecap="round"/></svg>
+      <span class="brand-text">Titluri de Stat</span>
+    </a>
+    <nav class="site-nav" aria-label="Principal">
+      <a href="./">Istoric dobânzi</a>
+      <a href="market">Piața secundară</a>
+      <a href="metodologie" aria-current="page">Metodologie</a>
+    </nav>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Comută tema">
+      <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main-content">
+
+  <div class="page-intro">
+    <div>
+      <h1>Metodologie și surse de date</h1>
+      <p class="lede">Cum sunt colectate, calculate și actualizate datele prezentate pe acest site.</p>
+    </div>
+  </div>
+
+  <article class="card" aria-labelledby="surse-title">
+    <div class="card-header">
+      <span class="dot dot-tezaur" aria-hidden="true"></span>
+      <h2 id="surse-title">Surse și frecvență de actualizare</h2>
+    </div>
+    <div class="accordion-body">
+      <p><strong>Dobânzile la emisiunile noi</strong> provin din paginile publice ale Ministerului Finanțelor / fidelis.ro pentru programele Fidelis și Tezaur. Datele istorice sunt verificate automat și actualizate după apariția unei emisiuni noi.</p>
+      <p><strong>Prețurile și randamentele din piața secundară</strong> provin de la <a href="https://fidelis.pacalab.ro" target="_blank" rel="noopener noreferrer">fidelis.pacalab.ro</a>, care agregă cotațiile BVB și calculează YTM. Snapshotul folosit de site este reîmprospătat zilnic după închiderea Bursei de Valori București.</p>
+      <p>Site-ul este un proiect independent menținut de <a href="https://github.com/victorsc" target="_blank" rel="noopener noreferrer">Victor Scaiceanu</a>; codul și istoricul modificărilor sunt publice pe <a href="https://github.com/victorsc/titluri-de-stat" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+    </div>
+  </article>
+
+  <article class="card" aria-labelledby="definitii-title">
+    <div class="card-header">
+      <span class="dot dot-fidelis" aria-hidden="true"></span>
+      <h2 id="definitii-title">Definiții importante</h2>
+    </div>
+    <div class="accordion-body">
+      <dl class="field-glossary">
+        <dt>Cupon / dobândă la emisiune</dt>
+        <dd>Rata nominală anuală plătită de stat pentru o emisiune. La subscrierea la par, aceasta este randamentul investitorului care păstrează titlul până la maturitate.</dd>
+        <dt>AskYTM</dt>
+        <dd>Randamentul anual la maturitate dacă cumperi la prețul Ask. Valorile sursei includ deja comisionul de brokeraj folosit în metodologia acesteia.</dd>
+        <dt>BidYTM</dt>
+        <dd>Randamentul pe care l-ar obține cumpărătorul la prețul Bid. Este relevant atunci când evaluezi o vânzare.</dd>
+        <dt>Spread</dt>
+        <dd>Diferența BidYTM − AskYTM. Spread peste un punct procentual este tratat pe site ca semnal de lichiditate redusă.</dd>
+        <dt>Etichetele Oportunitate / Corect / Supraevaluat</dt>
+        <dd>Compară AskYTM-ul unei obligațiuni cu obligațiuni lichide din aceeași monedă și aceeași bandă de scadență. Sunt comparații relative, nu recomandări de investiție.</dd>
+      </dl>
+    </div>
+  </article>
+
+  <article class="card" aria-labelledby="date-title">
+    <div class="card-header">
+      <span class="dot dot-tezaur" aria-hidden="true"></span>
+      <h2 id="date-title">Reutilizarea datelor</h2>
+    </div>
+    <div class="accordion-body">
+      <p>Datele sunt disponibile în format JSON și documentate pe pagina <a href="data/">Date deschise</a>:</p>
+      <ul>
+        <li><a href="data/fidelis.json"><code>data/fidelis.json</code></a> — istoricul dobânzilor Fidelis RON, EUR și donatori;</li>
+        <li><a href="data/tezaur.json"><code>data/tezaur.json</code></a> — istoricul dobânzilor Tezaur;</li>
+        <li><a href="data/fidelis_yields.json"><code>data/fidelis_yields.json</code></a> — ultimul snapshot zilnic pentru piața secundară.</li>
+      </ul>
+      <p>Dacă folosești datele, include o mențiune către pagina canonică și verifică termenii surselor originale. Compilația și codul proiectului sunt publice în repository-ul GitHub.</p>
+    </div>
+  </article>
+
+  <article class="card" aria-labelledby="limitari-title">
+    <div class="card-header">
+      <span class="dot dot-fidelis" aria-hidden="true"></span>
+      <h2 id="limitari-title">Limitări și corecții</h2>
+    </div>
+    <div class="accordion-body">
+      <p>Informațiile au caracter strict informativ și nu constituie recomandare de investiție, consultanță financiară sau fiscală. Randamentele pot varia în funcție de prețul real de executare, lichiditate, comisioanele brokerului și situația fiscală a investitorului.</p>
+      <p>Datele sunt validate automat, dar pot apărea erori din cauza modificărilor surselor sau a întârzierilor de publicare. Corecțiile și problemele pot fi raportate prin <a href="https://github.com/victorsc/titluri-de-stat/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a>.</p>
+    </div>
+  </article>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <span>Date publicate de <a href="https://www.mfinante.gov.ro" target="_blank" rel="noopener noreferrer">Ministerul Finanțelor</a></span>
+      <a href="data/">Date deschise</a>
+      <a href="https://github.com/victorsc/titluri-de-stat" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+    <p class="footer-note">Informațiile au caracter informativ și nu constituie recomandare de investiție.</p>
+  </div>
+</footer>
+
+<script src="theme.js"></script>
+<script data-goatcounter="https://victorsc.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
