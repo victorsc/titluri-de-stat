@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Static GitHub Pages site charting Romanian government bond yields (Fidelis & Tezaur) from 2020 to present. No framework, no build step. Web assets live under `public/`; tooling (scripts, workflows, docs) lives at the repo root.
+Static GitHub Pages site charting Romanian government bond yields (Fidelis & Tezaur) from 2020 to present. No framework and no local build step. Web assets live under `public/`; tooling (scripts, workflows, docs) lives at the repo root. Deployment runs `scripts/prerender-seo.js` to inject crawlable data summaries into the HTML artifact.
 
 Live at: https://victorsc.github.io/titluri-de-stat/
 
@@ -35,6 +35,7 @@ scripts/              ← Node.js tooling (not served)
   scrape.js           ← scrapes fidelis.ro, appends to public/data/fidelis.json & tezaur.json
   fetch-market.js     ← fetches fidelis.pacalab.ro, writes public/data/fidelis_yields.json
   validate-data.js    ← sanity-checks public/data/*.json; run before every data commit
+  prerender-seo.js    ← injects crawlable rate/market tables into the marked HTML blocks
 
 docs/                 ← developer documentation (not served)
   missing-emission-codes.md ← research on secondary-market bond emission dates
@@ -105,7 +106,7 @@ Checks labels, integer maturities, plausible rates, duplicate `(d, m)` pairs, an
 
 ## Deployment
 
-GitHub Pages is configured to deploy from GitHub Actions (source: `deploy.yml`). Every push to `main` triggers a deploy of the `public/` directory. Data-update commits also trigger a redeploy so users always see fresh data.
+GitHub Pages is configured to deploy from GitHub Actions (source: `deploy.yml`). Every push to `main` triggers a deploy of the `public/` directory; the workflow first runs `node scripts/prerender-seo.js`, which copies `public/` to `dist/` and injects current data into the initial HTML for crawlers. Data-update commits also trigger a redeploy so users always see fresh data.
 
 **One-time setup required** (already done for this repo): in GitHub repo Settings → Pages → Source, select "GitHub Actions".
 

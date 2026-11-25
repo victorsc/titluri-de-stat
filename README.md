@@ -39,6 +39,7 @@ Data sources: [fidelis.ro](https://www.fidelis.ro) (Ministerul Finanțelor) for 
 ├── scripts/
 │   ├── scrape.js                     # fidelis.ro scraper (cheerio)
 │   ├── fetch-market.js               # BVB quotes fetcher
+│   ├── prerender-seo.js              # Static SEO summaries/tables generated at deploy time
 │   └── package.json
 └── .github/workflows/
     ├── deploy.yml                    # Deploys public/ on every push to main
@@ -95,6 +96,6 @@ Append new entries at the end of the relevant array and push. Every push to `mai
 ## Tech stack
 
 - **Chart.js 4** — line charts with horizontal scroll, touch tooltips, click-to-toggle legend
-- **Vanilla JS + HTML** — no build step, no framework
-- **GitHub Pages** — `public/` deployed via GitHub Actions (`deploy.yml`)
+- **Vanilla JS + HTML** — no local build step, no framework
+- **GitHub Pages** — `public/` deployed via GitHub Actions (`deploy.yml`), with `scripts/prerender-seo.js` copying `public/` to `dist/` and injecting crawlable data summaries into the deployed HTML artifact
 - **GitHub Actions** — scheduled scraping via Node.js + cheerio

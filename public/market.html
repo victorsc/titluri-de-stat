@@ -22,9 +22,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" as="style" onload="this.rel='stylesheet'" />
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet" /></noscript>
   <link rel="preload" href="data/fidelis_yields.json" as="fetch" crossorigin="anonymous" />
   <link rel="stylesheet" href="style.css" />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet" />
+    <style>.tab-bar{display:none}.tab-panel{display:block}</style>
+  </noscript>
 </head>
 <body>
 
@@ -53,6 +56,11 @@
     <div>
       <h1>Piața secundară Fidelis</h1>
       <p class="lede">Obligațiunile Fidelis listate la BVB: ce randament obții dacă cumperi azi și dacă merită să vinzi ce ai. Nou aici? <a href="#despre">Cum funcționează</a>.</p>
+      <p class="seo-answer">
+        <!-- prerender:market-summary:start -->
+        Cotațiile pieței secundare sunt încărcate automat din ultimul snapshot zilnic.
+        <!-- prerender:market-summary:end -->
+      </p>
     </div>
     <span id="freshness-badge" class="freshness-pill" hidden></span>
   </div>
@@ -62,7 +70,7 @@
   </div>
 
   <!-- ===== EMISIUNI VIITOARE ===== -->
-  <article class="card piata-card" id="upcoming-section" aria-labelledby="upcoming-title">
+  <article class="card piata-card" id="upcoming-section" aria-labelledby="upcoming-title" hidden>
     <div class="card-header">
       <span class="dot dot-fidelis" aria-hidden="true"></span>
       <h2 id="upcoming-title">Emisiuni viitoare</h2>
@@ -104,10 +112,14 @@
       </div>
     </div>
     <div id="s-ron-panel" class="tab-panel active" role="tabpanel" aria-labelledby="stab-ron">
-      <!-- populated by market.js -->
+      <!-- prerender:market-ron:start -->
+        <!-- populated in the deploy artifact; replaced by market.js in browsers -->
+        <!-- prerender:market-ron:end -->
     </div>
     <div id="s-eur-panel" class="tab-panel" role="tabpanel" aria-labelledby="stab-eur">
-      <!-- populated by market.js -->
+      <!-- prerender:market-eur:start -->
+        <!-- populated in the deploy artifact; replaced by market.js in browsers -->
+        <!-- prerender:market-eur:end -->
     </div>
   </article>
 

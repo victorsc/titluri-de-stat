@@ -10,6 +10,7 @@ const BANDS = ['0-1', '1-2', '2-3', '3-5', '5+'];
 const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
 
 // ===== Boot =====
+setupTabs();
 Promise.all([
   fetch('data/fidelis_yields.json').then(r => { if (!r.ok) throw r.status; return r.json(); }),
   fetch('data/fidelis.json').then(r => r.ok ? r.json() : null).catch(() => null),
@@ -30,7 +31,6 @@ function init() {
   buildScreener(issued, labels);
   buildUpcoming(upcoming, issued);
   buildPortfolio(issued);
-  setupTabs();
   setupTooltips();
   setupHoldingForm(issued);
   setupDespreLinks();
@@ -272,6 +272,7 @@ const SORT_OPTIONS = [
 
 function renderScreenerPanel(panelId, bonds, labels) {
   const panel = document.getElementById(panelId);
+  panel.innerHTML = '';
   const ccy = panelId.includes('eur') ? 'eur' : 'ron';
   const bands = BANDS.filter(b => bonds.some(s => bandOf(s.Maturity) === b));
 
@@ -470,6 +471,7 @@ function buildUpcoming(upcoming, issued) {
   const tbody = document.getElementById('upcoming-body');
   if (!section || !tbody) return;
   if (!upcoming.length) { section.hidden = true; return; }
+  section.hidden = false;
 
   const FOUR_MONTHS_MS = 4 * 30.4375 * 24 * 3600 * 1000;
   const BUDGET = 10000;
