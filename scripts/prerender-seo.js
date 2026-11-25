@@ -118,8 +118,8 @@ function formatDate(isoStr) {
   return `${day} ${months[month - 1]} ${year}`;
 }
 
-function yrsLeftLabel(maturityStr) {
-  const totalMs = new Date(maturityStr) - Date.now();
+function yrsLeftLabel(maturityStr, referenceDate) {
+  const totalMs = new Date(maturityStr) - referenceDate;
   if (totalMs <= 0) return 'expirat';
   const totalMonths = Math.round(totalMs / (30.4375 * 24 * 3600 * 1000));
   if (totalMonths < 12) return totalMonths === 1 ? '1 lună' : totalMonths + ' luni';
@@ -150,6 +150,7 @@ function marketSummary(mkt, issued) {
 }
 
 function staticMarketTable(bonds, mkt, ccy) {
+  const referenceDate = new Date(`${mkt.transaction_date}T00:00:00Z`);
   const rows = bonds
     .slice()
     .sort((a, b) => new Date(a.Maturity) - new Date(b.Maturity))
@@ -158,7 +159,7 @@ function staticMarketTable(bonds, mkt, ccy) {
       return `<tr>
           <td data-label="Simbol"><code class="sym">${escapeHtml(s.Symbol)}</code></td>
           <td data-label="Maturitate">${formatDate(s.Maturity)}</td>
-          <td data-label="Timp rămas">${yrsLeftLabel(s.Maturity)}</td>
+          <td data-label="Timp rămas">${yrsLeftLabel(s.Maturity, referenceDate)}</td>
           <td data-label="Cupon" class="num-cell">${fmtPct(s.Coupon)}</td>
           <td data-label="AskYTM" class="num-cell"><strong>${fmtPct(s.AskYTM)}</strong></td>
           <td data-label="BidYTM" class="num-cell">${fmtPct(s.BidYTM)}</td>
